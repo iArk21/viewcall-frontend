@@ -7,7 +7,7 @@ export default function SignUp() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Registro - Leaderflix";
+    document.title = "Registro - Viewcall";
   }, []);
 
   const [usuario, setUsuario] = useState("");
