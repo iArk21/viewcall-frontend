@@ -13,7 +13,7 @@ const SignIn: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Iniciar sesión | Leaderflix";
+    document.title = "Iniciar sesión | Viewcall";
   }, []);
 
   const validarEmail = (email: string): boolean =>
