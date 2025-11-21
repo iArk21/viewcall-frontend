@@ -6,10 +6,12 @@ const API_URL = import.meta.env.VITE_API_URL;
  * @param {string} email - User's email address
  * @param {string} birthdate - User's birth date (format: YYYY-MM-DD)
  * @param {string} password - User's chosen password
+ * @param {string} apellido - User's last name
  * @returns {Promise<any>} API response JSON
  */
 export async function registrarUsuario(
   username: string,
+  apellido: string,
   email: string,
   birthdate: string,
   password: string
@@ -17,7 +19,7 @@ export async function registrarUsuario(
   const response = await fetch(`${API_URL}/users/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, email, birthdate, password }),
+    body: JSON.stringify({ username, apellido, email, birthdate, password }),
   });
 
   const data = await response.json();

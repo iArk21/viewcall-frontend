@@ -48,7 +48,7 @@ export default function SignUp() {
     }
 
     try {
-      await registrarUsuario(usuario, email, fechaNacimiento, contrasena);
+      await registrarUsuario(usuario, apellido, email, fechaNacimiento, contrasena);
       alert("¡Registro exitoso!");
       navigate("/sign_in");
     } catch (error: any) {
