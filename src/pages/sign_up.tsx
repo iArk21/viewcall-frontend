@@ -64,11 +64,11 @@ export default function SignUp() {
         {/* ICONO */}
         <div className="flex flex-col items-center mb-10">
           <div className="w-25 h-18 rounded-full bg-white shadow-md flex items-center justify-center">
-          <img
-            src="/viewcall-logo.png"
-            alt="Logo de Viewcall"
-            className="w-28 h-28 mb-0"
-          />
+            <img
+              src="/viewcall-logo.png"
+              alt="Logo de Viewcall"
+              className="w-28 h-28 mb-0"
+            />
           </div>
         </div>
 
@@ -127,9 +127,9 @@ export default function SignUp() {
               type="date"
               value={fechaNacimiento}
               onChange={(e) => setFechaNacimiento(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg border border-gray-300
+              className="w-full p-2 rounded bg-white border border-gray-300 focus:outline-none focus:border-blue-600
               [color-scheme:white]
-              [&::-webkit-calendar-picker-indicator]:invert"
+              [&::-webkit-calendar-picker-indicator]"
             />
           </div>
 
