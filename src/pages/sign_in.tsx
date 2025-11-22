@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUsuario } from "../services/api";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import useAuthStore from "../stores/useAuthStore";
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+
+  const { initAuthObserver, loginWithGoogle } = useAuthStore();
 
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -58,7 +61,19 @@ const SignIn: React.FC = () => {
     }
   };
 
+
+  const manejarLoginConGoogle = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginWithGoogle().then(() => navigate("/home"));
+  };
+
+  useEffect(() => {
+    const unsub = initAuthObserver();
+    return () => { unsub(); };
+  }, [initAuthObserver]);
+
   return (
+
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#eef2ff] to-[#e3e8ff] p-6">
       <div
         className="w-full max-w-md bg-white shadow-xl rounded-3xl px-10 py-12 border border-gray-100"
@@ -136,8 +151,31 @@ const SignIn: React.FC = () => {
             {isLoading ? "Iniciando..." : "Iniciar Sesión"}
           </button>
 
-           {/* Forgot Password */}
-           <div className="text-center">
+          {/* Divider */}
+          <div className="flex items-center my-4">
+            <div className="flex-grow h-px bg-gray-300"></div>
+            <span className="px-3 text-xs text-gray-400">o continúa con</span>
+            <div className="flex-grow h-px bg-gray-300"></div>
+          </div>
+
+          {/* Botón Google */}
+          <button
+            type="button"
+            onClick={manejarLoginConGoogle}
+            className="w-full py-3 flex items-center justify-center gap-3 
+             border border-gray-300 rounded-lg bg-white 
+             hover:bg-gray-50 transition font-medium text-gray-700"
+          >
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Iniciar sesión con Google
+          </button>
+
+          {/* Forgot Password */}
+          <div className="text-center">
             <Link
               to="/forgot_password"
               className="text-xs text-gray-400 hover:text-blue-500 transition"

@@ -8,7 +8,6 @@ import Profile from "../pages/profile";
 import ForgotPassword from "../pages/forgotPassword";
 import ResetPassword from "../pages/reset_password";
 import About from "../pages/about";
-import Favorites from "../pages/favorites";
 import MeetingRoom from "../pages/meetingRoom";
 import CreateMeeting from "../pages/createMeeting";
 
@@ -26,7 +25,6 @@ const AppRoutes = () => {
           <Route path="/forgot_password" element={<ForgotPassword />} />
           <Route path="/reset_password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
-          <Route path="/favorites" element={<Favorites />} />
           <Route path="/create-meeting" element={<CreateMeeting />} />
           <Route path="/meeting/:id" element={<MeetingRoom />} />
         </Routes>

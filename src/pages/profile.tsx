@@ -26,7 +26,7 @@ export default function Profile() {
     id: "",
     email: "",
     username: "",
-    lastname: "",
+    apellido: "",
     birthdate: "",
   });
 
@@ -114,6 +114,7 @@ export default function Profile() {
 
       const updatedInfo = {
         username: formData.username,
+        apellido: formData.apellido,
         email: formData.email,
         birthdate: formData.birthdate,
         ...(newPassword && { password: newPassword }),

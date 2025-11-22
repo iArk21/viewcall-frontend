@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation(); // 👈 Para detectar la ruta actual
+  const location = useLocation(); // Para detectar la ruta actual
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [shortcutsEnabled, setShortcutsEnabled] = useState(() => {
     return localStorage.getItem("shortcutsEnabled") === "true";
