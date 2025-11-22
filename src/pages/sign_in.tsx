@@ -139,9 +139,7 @@ const SignIn: React.FC = () => {
    */
   useEffect(() => {
     const unsub = initAuthObserver();
-    return () => {
-      unsub();
-    };
+    return () => unsub();
   }, [initAuthObserver]);
 
   return (
