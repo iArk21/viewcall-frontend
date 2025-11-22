@@ -11,7 +11,6 @@ import About from "../pages/about";
 import MeetingRoom from "../pages/meetingRoom";
 import CreateMeeting from "../pages/createMeeting";
 
-
 const AppRoutes = () => {
   return (
     <HelmetProvider>

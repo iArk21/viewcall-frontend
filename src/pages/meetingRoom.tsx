@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 
 
 export default function MeetingRoom() {
-  const { id } = useParams();
+  const {  } = useParams();
 
   return (
     <div className="min-h-screen bg-[#131820] text-white flex flex-col">
