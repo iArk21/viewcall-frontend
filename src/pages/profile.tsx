@@ -14,14 +14,30 @@ import { getUserProfile, updateUserProfile, deleteUserAccount } from "../service
 
 /**
  * Profile Component
- * Displays and manages user profile information
- * Accessible version (WCAG 2.1 – 3.3.1 Error Identification)
+ * 
+ * Allows the user to view and update personal information such as:
+ * - Username
+ * - Last name
+ * - Email
+ * - Birthdate
+ * - Password
+ * 
+ * The component includes:
+ * - Form validation
+ * - Password strength checking
+ * - WCAG accessible feedback (ARIA live regions)
+ * - Account deletion support
+ * 
+ * @component
+ * @returns {JSX.Element}
  */
 export default function Profile() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Main user data
+  /**
+   * Stores the main profile information of the user.
+   */
   const [userData, setUserData] = useState({
     id: "",
     email: "",
@@ -30,36 +46,57 @@ export default function Profile() {
     birthdate: "",
   });
 
-  // Editable form data
+  /**
+   * Stores the editable form information.
+   * Initialized with userData once the profile is loaded.
+   */
   const [formData, setFormData] = useState(userData);
 
-  // Password management
+  /**
+   * Handles password updating fields.
+   */
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
     confirmPassword: "",
   });
 
+  /**
+   * Toggles visibility for each password field.
+   */
   const [showPasswords, setShowPasswords] = useState({
     new: false,
     confirm: false,
   });
 
-  // Error message for password section
+  /** Displays password validation or mismatch errors */
   const [passwordError, setPasswordError] = useState("");
 
-  /** Validates password strength */
+  /**
+   * Validates the strength of a password.
+   *
+   * Requirements:
+   * - Minimum 8 characters
+   * - One uppercase letter
+   * - One special character
+   *
+   * @param {string} password - Password to validate
+   * @returns {boolean} Whether the password meets the requirements
+   */
   const validarContrasena = (password: string): boolean => {
     const regex =
       /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
     return regex.test(password);
   };
 
-  /** Load user profile */
+  /**
+   * Loads the user profile on mount.
+   * Fetches user data using the stored userId from localStorage.
+   */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userId = localStorage.getItem("userId");
-        if (!userId) throw new Error("No se encontró el ID del usuario");
+        if (!userId) throw new Error("User ID not found");
 
         const data = await getUserProfile(userId);
         setUserData(data);
@@ -73,40 +110,56 @@ export default function Profile() {
     fetchData();
   }, []);
 
-  /** Handle text field changes */
+  /**
+   * Handles input text changes for profile fields.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} e
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /** Handle password changes */
+  /**
+   * Handles changes for password fields.
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} e
+   */
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({ ...prev, [name]: value }));
     setPasswordError("");
   };
 
-  /** Toggle password visibility */
+  /**
+   * Toggles the visibility of a password field.
+   *
+   * @param {"new" | "confirm"} field - Field to toggle visibility
+   */
   const togglePasswordVisibility = (field: "new" | "confirm") => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  /** Save changes (profile + optional password) */
+  /**
+   * Handles updating the profile.
+   * Validates password if changed and updates user data in the backend.
+   */
   const handleSave = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      if (!userId) throw new Error("No se encontró el ID del usuario");
+      if (!userId) throw new Error("User ID not found");
 
       const { newPassword, confirmPassword } = passwordData;
 
+      // Password validation
       if (newPassword || confirmPassword) {
         if (newPassword !== confirmPassword) {
-          setPasswordError("Las contraseñas no coinciden.");
+          setPasswordError("Passwords do not match.");
           return;
         }
         if (!validarContrasena(newPassword)) {
           setPasswordError(
-            "La contraseña debe tener al menos 8 caracteres, una mayúscula y un carácter especial."
+            "The password must be at least 8 characters long, contain one uppercase letter and one special character."
           );
           return;
         }
@@ -124,42 +177,42 @@ export default function Profile() {
       setUserData(updated);
       setPasswordData({ newPassword: "", confirmPassword: "" });
       setPasswordError("");
-      alert("Perfil actualizado correctamente");
+      alert("Profile updated successfully");
     } catch (error) {
       console.error(error);
-      alert("No se pudo guardar los cambios");
+      alert("Failed to save changes");
     }
   };
 
-  /** Delete account */
+  /**
+   * Handles deleting the user account.
+   * Confirms the action and removes the user's credentials.
+   */
   const handleDelete = async () => {
-    if (
-      !confirm(
-        "¿Seguro que deseas eliminar tu perfil? Esta acción es irreversible."
-      )
-    )
-      return;
+    if (!confirm("Are you sure you want to delete your account? This action is irreversible.")) return;
+
     try {
       const userId = localStorage.getItem("userId");
-      if (!userId) throw new Error("No se encontró el ID del usuario");
+      if (!userId) throw new Error("User ID not found");
 
       await deleteUserAccount(userId);
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
 
-      alert("Perfil eliminado correctamente.");
+      alert("Account deleted successfully");
       navigate("/sign_in");
     } catch (error) {
       console.error(error);
-      alert("No se pudo eliminar la cuenta.");
+      alert("Failed to delete account.");
     }
   };
 
+  /** Loading screen */
   if (loading) {
     return (
       <div className="bg-[#141414] min-h-screen text-white flex items-center justify-center">
         <Navbar />
-        <p className="text-gray-400">Cargando perfil...</p>
+        <p className="text-gray-400">Loading profile...</p>
       </div>
     );
   }
@@ -212,6 +265,26 @@ export default function Profile() {
                     id="username"
                     type="text"
                     name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    aria-required="true"
+                    className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 mb-3 border border-gray-700">
+              <div className="flex items-center gap-3">
+                <UserIcon size={20} className="text-gray-400" />
+                <div className="flex-1">
+                  <label htmlFor="apellido" className="text-xs text-gray-500 block">
+                    Apellido
+                  </label>
+                  <input
+                    id="apellido"
+                    type="text"
+                    name="apellido"
                     value={formData.username}
                     onChange={handleChange}
                     aria-required="true"

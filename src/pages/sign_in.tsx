@@ -1,3 +1,19 @@
+/**
+ * SignIn Component
+ *
+ * Handles the user login process using:
+ * - Email and password authentication
+ * - Google OAuth login (via Zustand store)
+ *
+ * Includes:
+ * - Form validation
+ * - Password visibility toggle
+ * - Real-time error display
+ * - Loading state management
+ * - Automatic redirect after successful login
+ * - Google login using Firebase/Auth observer
+ */
+
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUsuario } from "../services/api";
@@ -7,24 +23,65 @@ import useAuthStore from "../stores/useAuthStore";
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
 
+  /** Zustand store: initializes the auth listener and Google login */
   const { initAuthObserver, loginWithGoogle } = useAuthStore();
 
+  /** Email entered by the user */
   const [usuario, setUsuario] = useState("");
+
+  /** Password entered by the user */
   const [contrasena, setContrasena] = useState("");
+
+  /** Controls whether the password is shown as plain text */
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
+
+  /** Array of validation or server errors */
   const [errores, setErrores] = useState<string[]>([]);
+
+  /** Indicates whether the login request is in progress */
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Updates page title when component loads.
+   */
   useEffect(() => {
     document.title = "Iniciar sesión | Viewcall";
   }, []);
 
+  /**
+   * Validates whether a string is a valid email.
+   *
+   * @param email - The email to validate
+   * @returns True if valid format, otherwise false
+   */
   const validarEmail = (email: string): boolean =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  /**
+   * Validates password strength.
+   * Must include:
+   * - Minimum 8 characters
+   * - At least 1 uppercase letter
+   * - At least 1 special character
+   *
+   * @param password - The password to validate
+   * @returns True if strong, otherwise false
+   */
   const validarContrasena = (password: string): boolean =>
-    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(password);
+    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(
+      password
+    );
 
+  /**
+   * Handles the login form submission.
+   * Performs:
+   * - Client-side validation
+   * - API login request
+   * - Storage of authentication token
+   * - Redirection after success
+   *
+   * @param e - Form submit event
+   */
   const manejarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -50,8 +107,11 @@ const SignIn: React.FC = () => {
 
     try {
       const data = await loginUsuario(usuario, contrasena);
+
+      // Save user authentication info
       localStorage.setItem("token", data.token);
       localStorage.setItem("userId", data.user.id);
+
       alert("Inicio de sesión exitoso");
       navigate("/home");
     } catch (error: any) {
@@ -61,19 +121,30 @@ const SignIn: React.FC = () => {
     }
   };
 
-
+  /**
+   * Handles Google login button.
+   * Uses Zustand store + Firebase auth.
+   *
+   * @param e - Click event
+   */
   const manejarLoginConGoogle = (e: React.FormEvent) => {
     e.preventDefault();
     loginWithGoogle().then(() => navigate("/home"));
   };
 
+  /**
+   * When component loads, this initializes
+   * Firebase Auth state observer (via Zustand).
+   * Automatically cleans up on unmount.
+   */
   useEffect(() => {
     const unsub = initAuthObserver();
-    return () => { unsub(); };
+    return () => {
+      unsub();
+    };
   }, [initAuthObserver]);
 
   return (
-
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#eef2ff] to-[#e3e8ff] p-6">
       <div
         className="w-full max-w-md bg-white shadow-xl rounded-3xl px-10 py-12 border border-gray-100"
@@ -112,7 +183,7 @@ const SignIn: React.FC = () => {
             />
           </div>
 
-          {/* Contraseña */}
+          {/* Password */}
           <div className="flex flex-col gap-1">
             <label
               htmlFor="password"
@@ -141,7 +212,7 @@ const SignIn: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón */}
+          {/* Login button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -158,7 +229,7 @@ const SignIn: React.FC = () => {
             <div className="flex-grow h-px bg-gray-300"></div>
           </div>
 
-          {/* Botón Google */}
+          {/* Google Login */}
           <button
             type="button"
             onClick={manejarLoginConGoogle}
@@ -174,7 +245,7 @@ const SignIn: React.FC = () => {
             Iniciar sesión con Google
           </button>
 
-          {/* Forgot Password */}
+          {/* Forgot password */}
           <div className="text-center">
             <Link
               to="/forgot_password"
@@ -184,7 +255,7 @@ const SignIn: React.FC = () => {
             </Link>
           </div>
 
-          {/* Errores */}
+          {/* Error messages */}
           {errores.length > 0 && (
             <div className="bg-red-900/30 border border-red-600 rounded-lg p-3 space-y-1">
               {errores.map((err, idx) => (
@@ -195,7 +266,7 @@ const SignIn: React.FC = () => {
             </div>
           )}
 
-          {/* Registro */}
+          {/* Register link */}
           <p className="text-center text-xs text-gray-400 mt-2">
             ¿No tienes cuenta?{" "}
             <Link to="/sign_up" className="text-blue-500 hover:underline">
