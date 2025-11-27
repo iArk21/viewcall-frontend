@@ -43,32 +43,32 @@ export default function Footer() {
             </div>
 
             <p className="text-xs text-gray-500 leading-relaxed max-w-xs">
-              Academic platform for the Viewcall project.
+             Viewcall proyecto academico.
             </p>
           </div>
 
           {/* NAVIGATION LINKS */}
           <div>
-            <h4 className="text-gray-700 font-semibold text-xs mb-2">Navigation</h4>
+            <h4 className="text-gray-700 font-semibold text-xs mb-2">Navegación</h4>
             <ul className="space-y-1 text-xs text-gray-600">
               <li>
                 <Link to="/home" className="hover:text-blue-600">
-                  Home
+                  Inicio
                 </Link>
               </li>
               <li>
                 <Link to="/profile" className="hover:text-blue-600">
-                  Profile
+                  Perfil
                 </Link>
               </li>
               <li>
                 <Link to="/create-meeting" className="hover:text-blue-600">
-                  Create Meeting
+                  Crear reunión
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="hover:text-blue-600">
-                  About
+                  Sobre nosotros
                 </Link>
               </li>
             </ul>
@@ -76,7 +76,7 @@ export default function Footer() {
 
           {/* HELP SECTION */}
           <div>
-            <h4 className="text-gray-700 font-semibold text-xs mb-2">Help</h4>
+            <h4 className="text-gray-700 font-semibold text-xs mb-2">Ayuda</h4>
             <ul className="space-y-1 text-xs text-gray-600">
               <li>
                 <a
@@ -85,7 +85,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="hover:text-blue-600"
                 >
-                  User Manual
+                  Manual de usuario
                 </a>
               </li>
 
@@ -94,7 +94,7 @@ export default function Footer() {
                   onClick={() => setShowAccessibilityModal(true)}
                   className="hover:text-blue-600"
                 >
-                  Accessibility Shortcuts
+                  Accesibilidad
                 </button>
               </li>
 
@@ -104,7 +104,7 @@ export default function Footer() {
                   className="hover:text-blue-600 flex items-center justify-center md:justify-start gap-1"
                 >
                   <BookOpen size={12} />
-                  Sitemap
+                  Mapa del sitio
                 </Link>
               </li>
             </ul>
@@ -114,7 +114,7 @@ export default function Footer() {
         {/* COPYRIGHT TEXT */}
         <div className="border-t border-gray-200 py-2">
           <p className="text-center text-[10px] text-gray-500">
-            © {new Date().getFullYear()} Viewcall — Academic project
+            © {new Date().getFullYear()} Viewcall — Proyecto Academico
           </p>
           <p className="text-center text-[10px] text-gray-400">
             Universidad del Valle · Proyecto Integrador 1
@@ -129,8 +129,7 @@ export default function Footer() {
           onClose={() => setShowAccessibilityModal(false)}
         >
           <p className="text-gray-300 text-sm leading-relaxed">
-            Here you can show keyboard shortcuts, navigation tips, quick access
-            features for users, and more.
+          Aquí puedes mostrar atajos de teclado, consejos de navegación, funciones de acceso rápido para los usuarios y más.
           </p>
         </Modal>
       )}

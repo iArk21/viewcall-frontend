@@ -1,143 +1,149 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Video, Calendar } from "lucide-react";
-
 /**
- * CreateMeeting Component
+ * CreateMeeting Page
  *
- * This component allows users to:
- * - Create a new meeting (generates a random UUID)
- * - Join an existing meeting by entering a code
- * - Navigate back to the home page
- *
- * The UI includes:
- * - App logo
- * - Meeting creation button
- * - Input field to join a meeting
- * - Visual icons representing call features
- *
- * @component
+ * Página para crear una nueva reunión:
+ * - Permite seleccionar fecha, hora y título.
+ * - Genera un código único de reunión.
+ * - Compatible con integración futura a backend/Firestore.
  */
+import { useState } from "react";
+import { CalendarDays, Users, Clock, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+
 export default function CreateMeeting() {
-  /** React Router navigate function */
+  const [meetingName, setMeetingName] = useState("");
+  const [meetingDate, setMeetingDate] = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
+
+  // ⬇️ CORRECCIÓN IMPORTANTE
+  const [participants, setParticipants] = useState<string[]>([]);
+
   const navigate = useNavigate();
 
-  /** 
-   * Stores the meeting code entered by the user.
-   * @type {[string, Function]}
-   */
-  const [code, setCode] = useState("");
+  const [newParticipant, setNewParticipant] = useState("");
 
-  /**
-   * Handles the creation of a new meeting by generating a UUID.
-   * Navigates the user to the generated meeting route.
-   *
-   * @function
-   */
-  const handleCreate = () => {
-    const meetingId = crypto.randomUUID();
-    navigate(`/meeting/${meetingId}`);
+  // Generar código de reunión simple (luego lo cambiamos a UUID)
+  const generateMeetingCode = () => {
+    return Math.random().toString(36).substring(2, 10).toUpperCase();
   };
 
-  /**
-   * Joins an existing meeting based on the code entered.
-   * Prevents navigation if the code is empty.
-   *
-   * @function
-   */
-  const handleJoin = () => {
-    if (!code.trim()) return;
-    navigate(`/meeting/${code}`);
+  const handleAddParticipant = () => {
+    if (!newParticipant.trim()) return;
+
+    // Agregar participante como string
+    setParticipants([...participants, newParticipant]);
+    setNewParticipant("");
   };
+
+  const handleCreateMeeting = () => {
+    if (!meetingName || !meetingDate || !meetingTime) {
+      alert("Completa todos los campos.");
+      return;
+    }
+  
+    const meetingCode = generateMeetingCode();
+  
+    const meetingData = {
+      name: meetingName,
+      date: meetingDate,
+      time: meetingTime,
+      participants,
+      code: meetingCode,
+      createdAt: new Date(),
+    };
+  
+    console.log("Reunión creada:", meetingData);
+  
+    navigate(`/meeting/${meetingCode}`);
+  };
+  
 
   return (
-    <main className="min-h-screen bg-[#E7ECFF] flex items-center justify-center p-6">
-      <div className="w-full max-w-xl bg-white/70 shadow-2xl rounded-3xl p-10 border border-gray-200">
+    <main className="min-h-screen flex justify-center py-10 px-4 bg-gradient-to-b from-[#101010] to-[#1a1a1a] text-white">
+      <div className="w-full max-w-lg bg-black/60 border border-white/10 p-8 rounded-3xl shadow-xl backdrop-blur-xl">
+        <h1 className="text-2xl font-semibold mb-6 text-center">
+          Crear nueva reunión
+        </h1>
 
-        {/* Logo and Back button */}
-        <div className="flex justify-between items-center mb-6">
+        {/* Nombre de la reunión */}
+        <label className="block mb-4">
+          <span className="flex items-center gap-2 text-sm mb-1">
+            <Users size={18} /> Nombre de la reunión
+          </span>
+          <input
+            type="text"
+            placeholder="Ej: Reunión del equipo"
+            value={meetingName}
+            onChange={(e) => setMeetingName(e.target.value)}
+            className="w-full p-2 rounded bg-black/40 border border-white/20"
+          />
+        </label>
 
-          {/* Logo */}
+        {/* Fecha */}
+        <label className="block mb-4">
+          <span className="flex items-center gap-2 text-sm mb-1">
+            <CalendarDays size={18} /> Fecha
+          </span>
+          <input
+            type="date"
+            value={meetingDate}
+            onChange={(e) => setMeetingDate(e.target.value)}
+            className="w-full p-2 rounded bg-black/40 border border-white/20"
+          />
+        </label>
+
+        {/* Hora */}
+        <label className="block mb-4">
+          <span className="flex items-center gap-2 text-sm mb-1">
+            <Clock size={18} /> Hora
+          </span>
+          <input
+            type="time"
+            value={meetingTime}
+            onChange={(e) => setMeetingTime(e.target.value)}
+            className="w-full p-2 rounded bg-black/40 border border-white/20"
+          />
+        </label>
+
+        {/* Participantes */}
+        <div className="mb-4">
+          <span className="flex items-center gap-2 text-sm mb-1">
+            <Users size={18} /> Participantes
+          </span>
+
           <div className="flex gap-2">
-            <img src="/viewcall-logo.png" className="w-10" />
-            <h1 className="text-2xl font-bold text-[#4169E1]">VIEWCALL</h1>
-          </div>
-
-          {/* Back button */}
-          <button
-            onClick={() => navigate("/home")}
-            className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
-            aria-label="Go back to sign in"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-
-        </div>
-
-        {/* Main title */}
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-          Videoconferencias seguras para todos
-        </h2>
-        <p className="text-gray-700 mb-8">
-          Conecta, colabora y celebra desde cualquier lugar
-        </p>
-
-        {/* Buttons */}
-        <div className="flex gap-4 mb-8">
-
-          {/* Create meeting */}
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 bg-[#345CFF] hover:bg-[#2C4DDB] text-white px-5 py-3 rounded-xl font-medium"
-          >
-            <Video size={20} /> Nueva reunión
-          </button>
-
-          {/* Meeting code input */}
-          <div className="flex items-center bg-white border border-gray-300 px-4 py-3 rounded-xl">
-            <Calendar className="text-[#345CFF]" size={20} />
             <input
-              className="ml-2 focus:outline-none"
-              placeholder="Introducir código"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              type="email"
+              placeholder="Correo del participante"
+              value={newParticipant}
+              onChange={(e) => setNewParticipant(e.target.value)}
+              className="flex-1 p-2 rounded bg-black/40 border border-white/20"
             />
+            <button
+              onClick={handleAddParticipant}
+              className="p-2 bg-blue-600 hover:bg-blue-700 rounded-xl"
+            >
+              <Plus size={20} />
+            </button>
           </div>
 
-          {/* Join meeting */}
-          <button
-            onClick={handleJoin}
-            className="bg-[#345CFF] text-white px-4 py-3 rounded-xl"
-          >
-            Unirse
-          </button>
+          {participants.length > 0 && (
+            <ul className="mt-3 text-sm opacity-80 space-y-1">
+              {participants.map((p, idx) => (
+                <li key={idx}>• {p}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Decorative icons */}
-        <div className="bg-white w-full rounded-3xl shadow p-6 flex items-center justify-center gap-10">
-          <div className="w-28 h-28 bg-yellow-400 rounded-full flex items-center justify-center">
-            👥
-          </div>
-          <div className="w-28 h-28 bg-blue-500 rounded-full flex items-center justify-center">
-            🎥
-          </div>
-          <div className="w-28 h-28 bg-green-500 rounded-full flex items-center justify-center">
-            💬
-          </div>
-        </div>
+        {/* Botón Crear */}
+        <button
+          onClick={handleCreateMeeting}
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 p-3 rounded-xl font-medium"
+        >
+          Crear reunión
+        </button>
       </div>
     </main>
   );

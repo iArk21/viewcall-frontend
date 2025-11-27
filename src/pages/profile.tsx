@@ -285,7 +285,7 @@ export default function Profile() {
                     id="apellido"
                     type="text"
                     name="apellido"
-                    value={formData.username}
+                    value={formData.apellido}
                     onChange={handleChange}
                     aria-required="true"
                     className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
