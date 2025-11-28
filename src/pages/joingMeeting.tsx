@@ -1,27 +1,19 @@
 import { useState } from "react";
 import { joinMeeting } from "../services/meetingService";
 import { useNavigate } from "react-router-dom";
-import useAuthStore from "../stores/useAuthStore";
 
-/**
- * JoinMeeting Page
- * Allows the user to enter a meeting ID.
- */
 export default function JoinMeeting() {
   const [meetingId, setMeetingId] = useState("");
   const navigate = useNavigate();
 
-  // Extraemos el usuario del store
-  const { user } = useAuthStore();
-
   async function handleJoin() {
-    if (!user) {
-      alert("You must be logged in to join a meeting.");
+    if (!meetingId.trim()) {
+      alert("Enter a meeting ID");
       return;
     }
 
     try {
-      await joinMeeting(meetingId, user.uid); // ahora es seguro
+      await joinMeeting(meetingId); 
       navigate(`/meeting/${meetingId}`);
     } catch (error) {
       console.error(error);
@@ -30,17 +22,23 @@ export default function JoinMeeting() {
   }
 
   return (
-    <main>
-      <h1>Join Meeting</h1>
+    <main className="p-10">
+      <h1 className="text-2xl">Join Meeting</h1>
 
       <input
         type="text"
         placeholder="Enter meeting ID"
         value={meetingId}
         onChange={(e) => setMeetingId(e.target.value)}
+        className="border p-2 rounded block mt-4"
       />
 
-      <button onClick={handleJoin}>Join</button>
+      <button
+        onClick={handleJoin}
+        className="bg-blue-600 text-white p-2 rounded mt-4"
+      >
+        Join
+      </button>
     </main>
   );
 }

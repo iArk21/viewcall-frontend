@@ -29,17 +29,18 @@ export async function createMeeting(hostId: string) {
  * @param meetingId - The meeting ID
  * @param userId - The user trying to join
  */
-export async function joinMeeting(meetingId: string, userId: string) {
-  const response = await fetch(`${API_URL}/meetings/${meetingId}/join`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId }),
-  });
-
-  if (!response.ok) throw new Error("Error joining meeting");
-
-  return await response.json();
-}
+export async function joinMeeting(meetingId: string) {
+    const response = await fetch(`${API_URL}/meetings/${meetingId}/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}), // ya no enviamos nada
+    });
+  
+    if (!response.ok) throw new Error("Error joining meeting");
+  
+    return await response.json();
+  }
+  
 
 /**
  * Get meeting info.

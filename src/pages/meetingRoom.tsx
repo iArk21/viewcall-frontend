@@ -28,13 +28,28 @@ export default function MeetingRoom() {
   const [screenSharing, setScreenSharing] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#131820] text-white flex flex-col">
+    <div className="min-h-screen bg-[#e8ecf7] text-white flex flex-col">
       <Navbar />
 
       {/* ID de reunión arriba (Sprint 2 requirement) */}
-      <div className="px-6 pt-3 text-sm opacity-70">
-        Código de reunión: <span className="font-semibold">{meetingId}</span>
+      <div className="mt-4 flex flex-col items-center gap-3 bg-white text-black p-4 rounded-xl shadow-md">
+        <div className="font-semibold text-lg">
+          Código de reunión: <span className="tracking-wider">{meetingId}</span>
+        </div>
+
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(meetingId || "");
+            alert("Código copiado al portapapeles ✓");
+          }}
+          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+        >
+          Copiar código
+        </button>
       </div>
+
+
+
 
       <div className="flex flex-1 p-6 gap-6">
         {/* VIDEO AREA */}

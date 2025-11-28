@@ -18,13 +18,11 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUsuario } from "../services/api";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import useAuthStore from "../stores/useAuthStore";
+import { auth } from "../lib/firebase.config";
+import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup,} from 'firebase/auth';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-
-  /** Zustand store: initializes the auth listener and Google login */
-  const { initAuthObserver, loginWithGoogle } = useAuthStore();
 
   /** Email entered by the user */
   const [usuario, setUsuario] = useState("");
@@ -40,6 +38,61 @@ const SignIn: React.FC = () => {
 
   /** Indicates whether the login request is in progress */
   const [isLoading, setIsLoading] = useState(false);
+
+  // LOGIN CON GOOGLE
+  const manejarLoginConGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      // Si quieres mandar al backend, aquí:
+      // await loginSocial(user.email, user.displayName, "google");
+
+      localStorage.setItem("token", "google_login");
+      localStorage.setItem("email", user.email || "");
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con Google"]);
+    }
+  };
+
+  // LOGIN CON FACEBOOK
+  const manejarLoginConFacebook = async () => {
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      localStorage.setItem("token", "facebook_login");
+      localStorage.setItem("email", user.email || "");
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con Facebook"]);
+    }
+  };
+
+  // LOGIN CON GITHUB
+  const manejarLoginConGithub = async () => {
+    try {
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      localStorage.setItem("token", "github_login");
+      localStorage.setItem("email", user.email || "");
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con GitHub"]);
+    }
+  };
+
 
   /**
    * Updates page title when component loads.
@@ -120,29 +173,6 @@ const SignIn: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  /**
-   * Handles Google login button.
-   * Uses Zustand store + Firebase auth.
-   *
-   * @param e - Click event
-   */
-  const manejarLoginConGoogle = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginWithGoogle().then(() => navigate("/home"));
-  };
-
-  /**
-   * When component loads, this initializes
-   * Firebase Auth state observer (via Zustand).
-   * Automatically cleans up on unmount.
-   */
-  useEffect(() => {
-    const unsub = initAuthObserver();
-    return () => {
-      unsub();
-    };
-  }, [initAuthObserver]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#eef2ff] to-[#e3e8ff] p-6">
@@ -244,6 +274,38 @@ const SignIn: React.FC = () => {
             />
             Iniciar sesión con Google
           </button>
+          {/* Facebook Login */}
+          <button
+            type="button"
+            onClick={manejarLoginConFacebook}
+            className="w-full py-3 flex items-center justify-center gap-3 
+   border border-gray-300 rounded-lg bg-white 
+   hover:bg-gray-50 transition font-medium text-gray-700"
+          >
+            <img
+              src="https://www.svgrepo.com/show/452196/facebook-1.svg"
+              alt="Facebook"
+              className="w-5 h-5"
+            />
+            Iniciar sesión con Facebook
+          </button>
+
+          {/* GitHub Login */}
+          <button
+            type="button"
+            onClick={manejarLoginConGithub}
+            className="w-full py-3 flex items-center justify-center gap-3 
+   border border-gray-300 rounded-lg bg-white 
+   hover:bg-gray-50 transition font-medium text-gray-700"
+          >
+            <img
+              src="https://www.svgrepo.com/show/448226/github.svg"
+              alt="Github"
+              className="w-5 h-5"
+            />
+            Iniciar sesión con GitHub
+          </button>
+
 
           {/* Forgot password */}
           <div className="text-center">

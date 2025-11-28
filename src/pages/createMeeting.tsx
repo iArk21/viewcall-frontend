@@ -1,37 +1,26 @@
-/**
- * CreateMeeting Page
- *
- * Página para crear una nueva reunión:
- * - Permite seleccionar fecha, hora y título.
- * - Genera un código único de reunión.
- * - Compatible con integración futura a backend/Firestore.
- */
 import { useState } from "react";
 import { CalendarDays, Users, Clock, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 
 export default function CreateMeeting() {
   const [meetingName, setMeetingName] = useState("");
   const [meetingDate, setMeetingDate] = useState("");
   const [meetingTime, setMeetingTime] = useState("");
-
-  // ⬇️ CORRECCIÓN IMPORTANTE
   const [participants, setParticipants] = useState<string[]>([]);
+  const [newParticipant, setNewParticipant] = useState("");
+
+  // ⭐ NUEVO: estado para mostrar el código
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
-  const [newParticipant, setNewParticipant] = useState("");
-
-  // Generar código de reunión simple (luego lo cambiamos a UUID)
   const generateMeetingCode = () => {
-    return Math.random().toString(36).substring(2, 10).toUpperCase();
+    return crypto.randomUUID().slice(0, 8).toUpperCase();
   };
 
   const handleAddParticipant = () => {
     if (!newParticipant.trim()) return;
 
-    // Agregar participante como string
     setParticipants([...participants, newParticipant]);
     setNewParticipant("");
   };
@@ -41,9 +30,12 @@ export default function CreateMeeting() {
       alert("Completa todos los campos.");
       return;
     }
-  
+
     const meetingCode = generateMeetingCode();
-  
+
+    // ⭐ Guardamos el código para mostrarlo
+    setGeneratedCode(meetingCode);
+
     const meetingData = {
       name: meetingName,
       date: meetingDate,
@@ -52,12 +44,14 @@ export default function CreateMeeting() {
       code: meetingCode,
       createdAt: new Date(),
     };
-  
+
     console.log("Reunión creada:", meetingData);
-  
-    navigate(`/meeting/${meetingCode}`);
+
+    // ⭐ Navegamos después de un pequeño delay (solo para que puedas ver el código)
+    setTimeout(() => {
+      navigate(`/meeting/${meetingCode}`);
+    }, 800);
   };
-  
 
   return (
     <main className="min-h-screen flex justify-center py-10 px-4 bg-gradient-to-b from-[#101010] to-[#1a1a1a] text-white">
@@ -66,7 +60,7 @@ export default function CreateMeeting() {
           Crear nueva reunión
         </h1>
 
-        {/* Nombre de la reunión */}
+        {/* Nombre */}
         <label className="block mb-4">
           <span className="flex items-center gap-2 text-sm mb-1">
             <Users size={18} /> Nombre de la reunión
@@ -137,13 +131,19 @@ export default function CreateMeeting() {
           )}
         </div>
 
-        {/* Botón Crear */}
         <button
           onClick={handleCreateMeeting}
           className="w-full mt-6 bg-blue-600 hover:bg-blue-700 p-3 rounded-xl font-medium"
         >
           Crear reunión
         </button>
+
+        {/* ⭐ Mostrar mensaje del código */}
+        {generatedCode && (
+          <div className="mt-4 text-center text-black bg-white rounded-xl p-3 font-semibold shadow-md">
+            Código de reunión: <span>{generatedCode}</span>
+          </div>
+        )}
       </div>
     </main>
   );
