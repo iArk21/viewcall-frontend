@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registrarUsuario } from "../services/api";
 import { Eye, EyeOff } from "lucide-react";
+import { registerUser } from '../services/Firebaseapi';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -84,13 +85,14 @@ export default function SignUp() {
 
     // Submit to API
     try {
-      await registrarUsuario(
-        usuario,
-        apellido,
-        email,
-        fechaNacimiento,
-        contrasena
-      );
+      await registerUser({
+        email: email.trim(),
+        password: contrasena,
+        username: usuario,
+        lastname: apellido,
+        birthdate: fechaNacimiento,
+      });
+
       alert("¡Registro exitoso!");
       navigate("/sign_in");
     } catch (error: any) {

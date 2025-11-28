@@ -10,7 +10,15 @@ import {
   EyeOff,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import { getUserProfile, updateUserProfile, deleteUserAccount } from "../services/api";
+
+import {
+  getProfile,
+  updateProfile,
+  changePassword,
+  deleteProfile,
+} from "../services/Firebaseapi";
+
+import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from '../services/authToken';
 
 /**
  * Profile Component
@@ -88,27 +96,34 @@ export default function Profile() {
     return regex.test(password);
   };
 
-  /**
-   * Loads the user profile on mount.
-   * Fetches user data using the stored userId from localStorage.
-   */
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userId = localStorage.getItem("userId");
-        if (!userId) throw new Error("User ID not found");
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const data = await getProfile(); // ahora enviará token
+      setUserData({
+        id: data.id,
+        email: data.email,
+        username: data.username,
+        apellido: data.lastname,
+        birthdate: data.birthdate,
+      });
+      setFormData({
+        id: data.id,
+        email: data.email,
+        username: data.username,
+        apellido: data.lastname,
+        birthdate: data.birthdate,
+      });
+    } catch (error: any) {
+      console.error("Error al cargar perfil:", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchData();
+}, []);
 
-        const data = await getUserProfile(userId);
-        setUserData(data);
-        setFormData(data);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+
 
   /**
    * Handles input text changes for profile fields.
@@ -144,69 +159,71 @@ export default function Profile() {
    * Handles updating the profile.
    * Validates password if changed and updates user data in the backend.
    */
-  const handleSave = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) throw new Error("User ID not found");
-
-      const { newPassword, confirmPassword } = passwordData;
-
-      // Password validation
-      if (newPassword || confirmPassword) {
-        if (newPassword !== confirmPassword) {
-          setPasswordError("Passwords do not match.");
-          return;
-        }
-        if (!validarContrasena(newPassword)) {
-          setPasswordError(
-            "The password must be at least 8 characters long, contain one uppercase letter and one special character."
-          );
-          return;
-        }
+// --- Guardar cambios ---
+const handleSave = async () => {
+  try {
+    // Validación de contraseña
+    const { newPassword, confirmPassword } = passwordData;
+    if (newPassword || confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setPasswordError("Passwords do not match.");
+        return;
+      }
+      if (!validarContrasena(newPassword)) {
+        setPasswordError(
+          "The password must be at least 8 characters long, contain one uppercase letter and one special character."
+        );
+        return;
       }
 
-      const updatedInfo = {
-        username: formData.username,
-        apellido: formData.apellido,
-        email: formData.email,
-        birthdate: formData.birthdate,
-        ...(newPassword && { password: newPassword }),
-      };
-
-      const updated = await updateUserProfile(userId, updatedInfo);
-      setUserData(updated);
-      setPasswordData({ newPassword: "", confirmPassword: "" });
-      setPasswordError("");
-      alert("Profile updated successfully");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save changes");
+            // Cambiar contraseña vía Firebase API
+      await changePassword(formData.email, "", newPassword); // "" porque no tienes currentPassword en tu UI
     }
-  };
+
+       // Actualizar resto de datos
+    const updatedInfo = {
+      username: formData.username,
+      lastname: formData.apellido,
+      email: formData.email,
+      birthdate: formData.birthdate,
+    };
+    await updateProfile(updatedInfo);
+
+    setUserData({ ...userData, ...updatedInfo });
+    setPasswordData({ newPassword: "", confirmPassword: "" });
+    setPasswordError("");
+    alert("Cambios guardados exitosamente");
+  } catch (error: any) {
+    console.error("Error al guardar cambios:", error.message);
+    alert(`Failed to save changes: ${error.message}`);
+  }
+};
 
   /**
    * Handles deleting the user account.
    * Confirms the action and removes the user's credentials.
    */
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete your account? This action is irreversible.")) return;
+    if (!confirm("¿Seguro que quieres eliminar tu cuenta? Esta acción es irreversible.")) return;
 
     try {
       const userId = localStorage.getItem("userId");
       if (!userId) throw new Error("User ID not found");
 
-      await deleteUserAccount(userId);
+      await deleteProfile();
+      setAuthToken(null);
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
 
-      alert("Account deleted successfully");
+      alert("Cuenta eliminada exitosamente");
       navigate("/sign_in");
     } catch (error) {
       console.error(error);
-      alert("Failed to delete account.");
+      alert("Error al eliminar la Cuenta");
     }
   };
 
+  
   /** Loading screen */
   if (loading) {
     return (

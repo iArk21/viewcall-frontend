@@ -16,19 +16,22 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUsuario } from "../services/api";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { auth } from "../lib/firebase.config";
-import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup,} from 'firebase/auth';
+
+import { setAuthToken } from "../services/authToken";
+import { loginWithEmailPassword } from "../services/Firebaseapi";
+import { doc, setDoc } from "firebase/firestore";
+import { db, auth } from "../lib/firebase.config";
+import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
 
   /** Email entered by the user */
-  const [usuario, setUsuario] = useState("");
+  const [email, setUsuario] = useState("");
 
   /** Password entered by the user */
-  const [contrasena, setContrasena] = useState("");
+  const [password, setContrasena] = useState("");
 
   /** Controls whether the password is shown as plain text */
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
@@ -38,7 +41,7 @@ const SignIn: React.FC = () => {
 
   /** Indicates whether the login request is in progress */
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // LOGIN CON GOOGLE
   const manejarLoginConGoogle = async () => {
     try {
@@ -47,8 +50,7 @@ const SignIn: React.FC = () => {
 
       const user = result.user;
 
-      // Si quieres mandar al backend, aquí:
-      // await loginSocial(user.email, user.displayName, "google");
+        
 
       localStorage.setItem("token", "google_login");
       localStorage.setItem("email", user.email || "");
@@ -69,6 +71,7 @@ const SignIn: React.FC = () => {
 
       localStorage.setItem("token", "facebook_login");
       localStorage.setItem("email", user.email || "");
+
       navigate("/home");
     } catch (error) {
       console.error(error);
@@ -86,6 +89,7 @@ const SignIn: React.FC = () => {
 
       localStorage.setItem("token", "github_login");
       localStorage.setItem("email", user.email || "");
+
       navigate("/home");
     } catch (error) {
       console.error(error);
@@ -140,12 +144,12 @@ const SignIn: React.FC = () => {
 
     const nuevosErrores: string[] = [];
 
-    if (!usuario) nuevosErrores.push("El correo electrónico es obligatorio.");
-    else if (!validarEmail(usuario))
+    if (!email) nuevosErrores.push("El correo electrónico es obligatorio.");
+    else if (!validarEmail(email))
       nuevosErrores.push("Debes ingresar un correo electrónico válido.");
 
-    if (!contrasena) nuevosErrores.push("La contraseña es obligatoria.");
-    else if (!validarContrasena(contrasena))
+    if (!password) nuevosErrores.push("La contraseña es obligatoria.");
+    else if (!validarContrasena(password))
       nuevosErrores.push(
         "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un signo."
       );
@@ -159,11 +163,8 @@ const SignIn: React.FC = () => {
     setErrores([]);
 
     try {
-      const data = await loginUsuario(usuario, contrasena);
-
-      // Save user authentication info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data.user.id);
+      const { idToken } = await loginWithEmailPassword(email.trim(), password);
+      setAuthToken(idToken);
 
       alert("Inicio de sesión exitoso");
       navigate("/home");
@@ -205,7 +206,7 @@ const SignIn: React.FC = () => {
             <input
               id="email"
               type="email"
-              value={usuario}
+              value={email}
               disabled={isLoading}
               onChange={(e) => setUsuario(e.target.value)}
               placeholder="ejemplo@correo.com"
@@ -225,7 +226,7 @@ const SignIn: React.FC = () => {
               <input
                 id="password"
                 type={mostrarContrasena ? "text" : "password"}
-                value={contrasena}
+                value={password}
                 disabled={isLoading}
                 onChange={(e) => setContrasena(e.target.value)}
                 placeholder="Tu contraseña"
