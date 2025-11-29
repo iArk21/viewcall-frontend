@@ -25,7 +25,7 @@ const AppRoutes = () => {
           <Route path="/reset_password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route path="/create-meeting" element={<CreateMeeting />} />
-          <Route path="/meeting/:id" element={<MeetingRoom />} />
+          <Route path="/meeting/:roomId" element={<MeetingRoom />} />
         </Routes>
       </BrowserRouter>
     </HelmetProvider>
