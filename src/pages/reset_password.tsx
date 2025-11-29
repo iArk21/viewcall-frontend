@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { resetPassword } from "../services/api";
+/**import { resetPassword } from "../services/api";**/
 import { Eye, EyeOff } from "lucide-react";
 
 /**
@@ -91,7 +91,7 @@ const ResetPassword: React.FC = () => {
     // Attempt password reset via API
     try {
       setCargando(true);
-      await resetPassword({ token: token!, newPassword: nuevaContrasena });
+      //await resetPassword({ token: token!, newPassword: nuevaContrasena });
 
       // Show success message and redirect to login after 2 seconds
       setMensaje("¡Contraseña actualizada exitosamente!");

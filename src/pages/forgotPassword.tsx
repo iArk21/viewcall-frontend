@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { forgotPassword } from "../services/api";
+import { requestPasswordReset } from "../services/Firebaseapi";
 
 /**
  * ForgotPassword Component
@@ -38,8 +38,9 @@ const ForgotPassword: React.FC = () => {
       setError("");
       setMensaje("");
 
-      const data = await forgotPassword(email); // usa la función de api.ts
-      setMensaje(data.msg || "Se ha enviado un correo para restablecer tu contraseña.");
+      const resp = await requestPasswordReset(email.trim());
+      setMensaje(resp.message || "Se ha enviado un correo para restablecer tu contraseña.");
+
     } catch (err: any) {
       setError(err.message || "Error al enviar el correo. Inténtalo nuevamente.");
     }
