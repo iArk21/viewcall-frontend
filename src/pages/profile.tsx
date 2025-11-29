@@ -18,7 +18,7 @@ import {
   deleteProfile,
 } from "../services/Firebaseapi";
 
-import { AUTH_TOKEN_EVENT, getAuthToken, setAuthToken } from '../services/authToken';
+import { setAuthToken } from '../services/authToken';
 
 /**
  * Profile Component

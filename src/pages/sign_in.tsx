@@ -20,8 +20,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { setAuthToken } from "../services/authToken";
 import { loginWithEmailPassword } from "../services/Firebaseapi";
-import { doc, setDoc } from "firebase/firestore";
-import { db, auth } from "../lib/firebase.config";
+import { auth } from "../lib/firebase.config";
 import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 
 const SignIn: React.FC = () => {
