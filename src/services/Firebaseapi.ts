@@ -5,7 +5,7 @@ const API_BASE =
   (import.meta.env.DEV
     ? import.meta.env.VITE_API_BASE_URL_LOCAL || "http://localhost:8080/api/v1"
     : import.meta.env.VITE_API_BASE_URL_PROD ||
-    "https://backend-meet-lloz.onrender.com/api/v1");
+    "https://viewcall-back.onrender.com/api/v1");
 
 type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
 
