@@ -52,19 +52,28 @@ export default function Home() {
           <div className="flex items-center bg-white border border-gray-300 px-4 py-3 rounded-xl">
             <Calendar className="text-[#345CFF]" size={20} />
 
-            {/**
-             * Meeting code input
-             *
-             * @input Allows users to type a meeting code.
-             * @controlled Controlled by the `code` state.
-             */}
             <input
               className="ml-2 focus:outline-none"
               placeholder="Introducir código"
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
+
+            {/* Botón para ingresar a la reunión */}
+            <button
+              onClick={() => {
+                if (!code.trim()) {
+                  alert("Ingresa un código de reunión");
+                  return;
+                }
+                window.location.href = `/meeting/${code}`;
+              }}
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"
+            >
+              Unirse
+            </button>
           </div>
+
         </div>
 
         {/* MAIN ICON BUTTONS */}
