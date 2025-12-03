@@ -39,6 +39,7 @@ const ForgotPassword: React.FC = () => {
       setMensaje("");
 
       const resp = await requestPasswordReset(email.trim());
+      
       setMensaje(resp.message || "Se ha enviado un correo para restablecer tu contraseña.");
 
     } catch (err: any) {

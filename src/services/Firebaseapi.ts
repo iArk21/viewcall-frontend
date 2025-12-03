@@ -10,7 +10,7 @@ const API_BASE =
 type ApiMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface ApiOptions<TBody = unknown> {
-  method?: ApiMethod;
+  method?: ApiMethod; 
   body?: TBody;
   tokenOverride?: string;
 }
@@ -180,10 +180,7 @@ export interface Meeting {
   id: string;
   ownerId: string;
   title: string;
-  description?: string;
-  date: string;
-  time: string;
-  duration: number;
+  date: string
   createdAt: string;
   updatedAt: string;
 }
@@ -192,8 +189,6 @@ export interface CreateMeetingPayload {
   title: string;
   date: string;
   time: string;
-  duration: number;
-  description?: string;
 }
 
 export const createMeeting = (payload: CreateMeetingPayload) =>

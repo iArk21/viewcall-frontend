@@ -6,7 +6,6 @@ import SignUp from "../pages/sign_up";
 import Home from "../pages/home";
 import Profile from "../pages/profile";
 import ForgotPassword from "../pages/forgotPassword";
-import ResetPassword from "../pages/reset_password";
 import About from "../pages/about";
 import MeetingRoom from "../pages/meetingRoom";
 import CreateMeeting from "../pages/createMeeting";
@@ -22,7 +21,6 @@ const AppRoutes = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/forgot_password" element={<ForgotPassword />} />
-          <Route path="/reset_password" element={<ResetPassword />} />
           <Route path="/about" element={<About />} />
           <Route path="/create-meeting" element={<CreateMeeting />} />
           <Route path="/meeting/:roomId" element={<MeetingRoom />} />

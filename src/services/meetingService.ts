@@ -1,54 +1,75 @@
-/**
- * Meeting Service - Handle meeting-related requests.
- * Uses Fetch API and environment variables.
- *
- * @module meetingService
- */
+import { io, Socket } from "socket.io-client";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const CHAT_URL =
+  import.meta.env.VITE_CHAT_SOCKET_URL || "http://localhost:3000";
 
-/**
- * Create a new meeting.
- * @param hostId - The ID of the meeting creator
- * @returns Created meeting data
- */
-export async function createMeeting(hostId: string) {
-  const response = await fetch(`${API_URL}/meetings`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hostId }),
-  });
+export type ChatUserInfo = {
+  userId: string;
+  displayName: string;
+  photoURL?: string;
+};
 
-  if (!response.ok) throw new Error("Error creating meeting");
+export type ChatParticipant = {
+  socketId: string;
+  userInfo: ChatUserInfo;
+};
 
-  return await response.json();
-}
+export type ChatMessagePayload = {
+  roomId: string;
+  userName: string;
+  message: string;
+  timestamp: number;
+};
 
-/**
- * Join an existing meeting by ID.
- * @param meetingId - The meeting ID
- * @param userId - The user trying to join
- */
-export async function joinMeeting(meetingId: string) {
-    const response = await fetch(`${API_URL}/meetings/${meetingId}/join`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}), // ya no enviamos nada
-    });
-  
-    if (!response.ok) throw new Error("Error joining meeting");
-  
-    return await response.json();
-  }
-  
+// Single socket instance for the entire app.
+const socket: Socket = io(CHAT_URL, {
+  autoConnect: false,
+  transports: ["websocket"],
+});
 
-/**
- * Get meeting info.
- * @param meetingId - Meeting identifier
- */
-export async function getMeeting(meetingId: string) {
-  const response = await fetch(`${API_URL}/meetings/${meetingId}`);
-  if (!response.ok) throw new Error("Meeting not found");
+const subscribe = <TPayload>(
+  event: string,
+  handler: (payload: TPayload) => void
+) => {
+  socket.off(event, handler);
+  socket.on(event, handler);
+  return () => socket.off(event, handler);
+};
 
-  return await response.json();
-}
+export const connectSocket = () => socket.connect();
+export const disconnectSocket = () => socket.disconnect();
+
+export const joinRoom = (roomId: string, userInfo: ChatUserInfo) =>
+  socket.emit("join:room", roomId, userInfo);
+
+export const sendChatMessage = (payload: ChatMessagePayload) =>
+  socket.emit("chat:message", payload);
+
+export const onExistingUsers = (handler: (users: ChatParticipant[]) => void) =>
+  subscribe("existing:users", handler);
+
+export const onUserJoined = (
+  handler: (data: ChatParticipant) => void
+) => subscribe("user:joined", handler);
+
+export const onUserLeft = (
+  handler: (data: ChatParticipant) => void
+) => subscribe("user:left", handler);
+
+export const onChatMessage = (
+  handler: (data: ChatMessagePayload) => void
+) => subscribe("chat:message", handler);
+
+export const onRoomFull = (handler: () => void) =>
+  subscribe("room:full", handler);
+
+export const onSocketConnect = (handler: () => void) =>
+  subscribe("connect", handler);
+
+export const onSocketDisconnect = (handler: () => void) =>
+  subscribe("disconnect", handler);
+
+export const onSocketError = (handler: (err: Error) => void) =>
+  subscribe("connect_error", handler);
+
+export { socket };

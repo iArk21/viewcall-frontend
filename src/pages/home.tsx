@@ -4,6 +4,8 @@ import Footer from "../components/Footer";
 import { Calendar } from "lucide-react";
 import { useState } from "react";
 
+import { getMeeting } from "../services/Firebaseapi";
+
 /**
  * Home Page Component
  * 
@@ -61,12 +63,24 @@ export default function Home() {
 
             {/* Botón para ingresar a la reunión */}
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (!code.trim()) {
                   alert("Ingresa un código de reunión");
                   return;
                 }
-                window.location.href = `/meeting/${code}`;
+                try {
+                  const res = await getMeeting(code);
+
+                  if (!res) {
+                    alert("El código no existe. Verifica e inténtalo de nuevo.");
+                    return;
+                  }
+
+                  window.location.href = `/meeting/${code}`;
+                } catch (error) {
+                  console.error("Error verificando reunión:", error);
+                  alert("No se pudo verificar el código con el servidor.");
+                }
               }}
               className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"
             >
