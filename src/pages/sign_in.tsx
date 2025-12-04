@@ -18,8 +18,9 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
+
 import { setAuthToken } from "../services/authToken";
-import { loginWithEmailPassword } from "../services/Firebaseapi";
+import { loginWithEmailPassword, getProfile } from "../services/Firebaseapi";
 import { auth } from "../lib/firebase.config";
 import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 
@@ -40,7 +41,7 @@ const SignIn: React.FC = () => {
 
   /** Indicates whether the login request is in progress */
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // LOGIN CON GOOGLE
   const manejarLoginConGoogle = async () => {
     try {
@@ -49,7 +50,7 @@ const SignIn: React.FC = () => {
 
       const user = result.user;
 
-        
+
 
       localStorage.setItem("token", "google_login");
       localStorage.setItem("email", user.email || "");
@@ -164,6 +165,10 @@ const SignIn: React.FC = () => {
     try {
       const { idToken } = await loginWithEmailPassword(email.trim(), password);
       setAuthToken(idToken);
+
+      const userData = await getProfile();
+      localStorage.setItem("userName", userData.username);
+      localStorage.setItem("user", JSON.stringify(userData));
 
       alert("Inicio de sesión exitoso");
       navigate("/home");

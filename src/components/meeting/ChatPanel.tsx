@@ -6,10 +6,6 @@ import {
   joinRoom,
   sendChatMessage,
   onChatMessage,
-  onExistingUsers,
-  onUserJoined,
-  onUserLeft,
-  socket
 } from "../../services/chatSocket";
 
 interface ChatPanelProps {
@@ -17,7 +13,7 @@ interface ChatPanelProps {
   username: string;
 }
 
-interface Message {
+interface Message {   
   text: string;
   senderName: string;
   timestamp: number;

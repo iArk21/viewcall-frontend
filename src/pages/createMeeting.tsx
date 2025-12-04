@@ -3,15 +3,15 @@ import { CalendarDays, Users, Clock, Plus, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createMeeting } from "../services/Firebaseapi"; //
 
-import { AUTH_TOKEN_EVENT, getAuthToken } from '../services/authToken';
+import { getAuthToken } from '../services/authToken';
 
 
 export default function CreateMeeting() {
-  const [authTokenState, setAuthTokenState] = useState(() => getAuthToken() ?? '');
+  const [ ] = useState(() => getAuthToken() ?? '');
   const [meetingName, setMeetingName] = useState("");
   const [meetingDate, setMeetingDate] = useState("");
   const [meetingTime, setMeetingTime] = useState("");
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [generatedCode, ] = useState<string | null>(null);
 
   const navigate = useNavigate();
 

@@ -13,7 +13,7 @@ export default function MeetingRoom() {
 
   // Obtener nombre desde JoinMeeting o localStorage
   const username =
-    location.state?.username || localStorage.getItem("userName") || "Guest";
+  location.state?.username || localStorage.getItem("userName") || "Invitado";
 
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(true);
