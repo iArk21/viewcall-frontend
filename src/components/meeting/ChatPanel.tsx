@@ -1,6 +1,16 @@
 import { SendHorizontal } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { socket } from "../../sockets/socket";
+import {
+  connectSocket,
+  disconnectSocket,
+  joinRoom,
+  sendChatMessage,
+  onChatMessage,
+  onExistingUsers,
+  onUserJoined,
+  onUserLeft,
+  socket
+} from "../../services/chatSocket";
 
 interface ChatPanelProps {
   roomId: string;
@@ -10,61 +20,64 @@ interface ChatPanelProps {
 interface Message {
   text: string;
   senderName: string;
+  timestamp: number;
 }
-
 
 export default function ChatPanel({ roomId, username }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // --- JOIN ROOM ---
   useEffect(() => {
-    socket.emit("joinRoom", { roomId, username });
+    // CONNECT SOCKET
+    connectSocket();
 
-    const onHistory = (payload: any) => {
-      if (payload.roomId === roomId) {
-        setMessages(payload.messages || []);
-      }
-    };
-
-    const onReceive = (msg: any) => {
-      console.log("MSG RECIBIDO:", msg);
-
-      if (msg.roomId === roomId) {
-        setMessages((prev) => [...prev, msg]);
-      }
-    };
-
-    socket.on("roomHistory", onHistory);
-    socket.on("receiveMessage", (msg) => {
-      console.log("Mensaje recibido:", msg);
-      setMessages((prev) => [...prev, msg]);
+    // JOIN ROOM (usando tu API real)
+    joinRoom(roomId, {
+      userId: crypto.randomUUID(),
+      displayName: username,
+      photoURL: ""
     });
 
+    //LISTEN CHAT MESSAGES
+    const unsubscribeChat = onChatMessage((msg) => {
+      if (msg.roomId === roomId) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: msg.message,
+            senderName: msg.userName,
+            timestamp: msg.timestamp
+          }
+        ]);
+      }
+    });
 
     return () => {
-      socket.emit("leaveRoom", { roomId, username });
-      socket.off("roomHistory", onHistory);
-      socket.off("receiveMessage", onReceive);
+      // DISCONNECT
+      disconnectSocket();
+      unsubscribeChat();
     };
   }, [roomId, username]);
 
-  // Auto-scroll
-  useEffect(() => scrollToBottom(), [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  // --- SEND MESSAGE ---
+  // SEND MESSAGE
   const send = () => {
     if (!input.trim()) return;
 
-    socket.emit("sendMessage", {
+    sendChatMessage({
       roomId,
-      text: input,
-      // NO enviar senderName, el backend lo ignora
+      userName: username,
+      message: input,
+      timestamp: Date.now()
     });
 
     setInput("");
@@ -76,12 +89,8 @@ export default function ChatPanel({ roomId, username }: ChatPanelProps) {
 
       <div className="flex-1 overflow-y-auto space-y-3 pr-2 bg-[#1B1F29] p-2 rounded-lg">
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className="bg-[#161A21] p-3 rounded-lg text-sm text-gray-300"
-          >
-            <strong>
-            {msg.senderName}</strong>{msg.text}
+          <div key={index} className="bg-[#161A21] p-3 rounded-lg text-sm text-gray-300">
+            <strong>{msg.senderName}</strong>: {msg.text}
           </div>
         ))}
         <div ref={messagesEndRef} />
