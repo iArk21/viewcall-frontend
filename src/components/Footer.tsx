@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Film, BookOpen } from "lucide-react";
+import { Film } from "lucide-react";
 
 /**
  * Footer component for the Viewcall project.
@@ -80,7 +80,7 @@ export default function Footer() {
             <ul className="space-y-1 text-xs text-gray-600">
               <li>
                 <a
-                  href="/docs/manual-de-usuario.pdf"
+                  href=""
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-blue-600"
@@ -96,16 +96,6 @@ export default function Footer() {
                 >
                   Accesibilidad
                 </button>
-              </li>
-
-              <li>
-                <Link
-                  to="/sitemap"
-                  className="hover:text-blue-600 flex items-center justify-center md:justify-start gap-1"
-                >
-                  <BookOpen size={12} />
-                  Mapa del sitio
-                </Link>
               </li>
             </ul>
           </div>
@@ -125,13 +115,26 @@ export default function Footer() {
       {/* ACCESSIBILITY MODAL */}
       {showAccessibilityModal && (
         <Modal
-          title="Accessibility Shortcuts"
-          onClose={() => setShowAccessibilityModal(false)}
-        >
-          <p className="text-gray-300 text-sm leading-relaxed">
-          Aquí puedes mostrar atajos de teclado, consejos de navegación, funciones de acceso rápido para los usuarios y más.
-          </p>
-        </Modal>
+        title="Accessibility Shortcuts"
+        onClose={() => setShowAccessibilityModal(false)}
+      >
+        <p className="text-gray-300 text-sm leading-relaxed mb-3">
+          Aquí puedes ver los atajos de teclado disponibles para navegar rápidamente por la aplicación:
+        </p>
+      
+        <ul className="text-gray-200 text-sm space-y-2">
+          <li>
+            <span className="font-semibold text-blue-400">Alt + H</span> — Ir a <span className="italic">Home</span>
+          </li>
+          <li>
+            <span className="font-semibold text-blue-400">Alt + P</span> — Ir a <span className="italic">Perfil</span>
+          </li>
+          <li>
+            <span className="font-semibold text-blue-400">Alt + A</span> — Ir a <span className="italic">Acerca de</span>
+          </li>
+        </ul>
+      </Modal>
+      
       )}
     </>
   );

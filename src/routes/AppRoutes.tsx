@@ -9,6 +9,7 @@ import ForgotPassword from "../pages/forgotPassword";
 import About from "../pages/about";
 import MeetingRoom from "../pages/meetingRoom";
 import CreateMeeting from "../pages/createMeeting";
+import ChangePassword from "../pages/changePassword";
 
 const AppRoutes = () => {
   return (
@@ -24,6 +25,8 @@ const AppRoutes = () => {
           <Route path="/about" element={<About />} />
           <Route path="/create-meeting" element={<CreateMeeting />} />
           <Route path="/meeting/:roomId" element={<MeetingRoom />} />
+          <Route path="/change_password" element={<ChangePassword />} />
+
         </Routes>
       </BrowserRouter>
     </HelmetProvider>
