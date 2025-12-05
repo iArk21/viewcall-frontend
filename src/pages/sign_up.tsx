@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { registerUser } from '../services/Firebaseapi';
+import { registerUser } from "../services/Firebaseapi";
 
 export default function SignUp() {
   const navigate = useNavigate();
 
-  // Change document title on mount
   useEffect(() => {
     document.title = "Registro - Viewcall";
   }, []);
@@ -19,70 +18,17 @@ export default function SignUp() {
   const [contrasena, setContrasena] = useState("");
   const [confirmarContrasena, setConfirmarContrasena] = useState("");
 
-  // Password visibility toggles
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
   const [mostrarConfirmarContrasena, setMostrarConfirmarContrasena] =
     useState(false);
 
-  // Error handling
+  // Errores backend
   const [errores, setErrores] = useState<string[]>([]);
 
-  /**
-   * Validate email format using regex
-   */
-  const validarEmail = (email: string): boolean =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  /**
-   * Validate password:
-   * - At least 8 characters
-   * - One uppercase letter
-   * - One special character
-   */
-  const validarContrasena = (password: string): boolean =>
-    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(
-      password
-    );
-
-  /**
-   * Handles form submission:
-   * - Validates fields
-   * - Sends data to API
-   * - Redirects on success
-   */
   const manejarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nuevosErrores: string[] = [];
+    setErrores([]);
 
-    // Field validations
-    if (!usuario) nuevosErrores.push("El nombre es obligatorio.");
-    if (!apellido) nuevosErrores.push("El apellido es obligatorio.");
-
-    if (!email) nuevosErrores.push("El correo electrónico es obligatorio.");
-    else if (!validarEmail(email))
-      nuevosErrores.push("Debes ingresar un correo electrónico válido.");
-
-    if (!fechaNacimiento)
-      nuevosErrores.push("La fecha de nacimiento es obligatoria.");
-
-    if (!contrasena) nuevosErrores.push("La contraseña es obligatoria.");
-    else if (!validarContrasena(contrasena))
-      nuevosErrores.push(
-        "La contraseña debe tener mínimo 8 caracteres, una mayúscula y un signo."
-      );
-
-    if (!confirmarContrasena)
-      nuevosErrores.push("Debes confirmar tu contraseña.");
-    else if (contrasena !== confirmarContrasena)
-      nuevosErrores.push("Las contraseñas no coinciden.");
-
-    // If validation fails → render errors
-    if (nuevosErrores.length > 0) {
-      setErrores(nuevosErrores);
-      return;
-    }
-
-    // Submit to API
     try {
       await registerUser({
         email: email.trim(),
@@ -96,14 +42,14 @@ export default function SignUp() {
       navigate("/sign_in");
     } catch (error: any) {
       console.error(error);
-      setErrores([error.message || "Error del servidor."]);
+      setErrores([error.message || "Error en el registro"]);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#e8ecf7] flex justify-center items-center px-4 pt-10">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-xl py-10 px-8 relative">
-
+        
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
           <div className="w-25 h-18 rounded-full bg-white shadow-md flex items-center justify-center">
@@ -115,7 +61,6 @@ export default function SignUp() {
           </div>
         </div>
 
-        {/* Header */}
         <h2 className="text-center mt-10 text-gray-700 text-lg font-medium">
           Crea tu cuenta
         </h2>
@@ -123,27 +68,50 @@ export default function SignUp() {
           Bienvenido a Viewcall
         </p>
 
-        {/* Form */}
-        <form onSubmit={manejarSubmit} className="mt-6 space-y-4" noValidate>
-          {/* First name */}
+        {/* FORM */}
+        <form onSubmit={manejarSubmit} className="mt-6 space-y-4">
+          
+          {/* Nombre */}
           <div>
             <label className="text-gray-700 text-sm font-medium">Nombre</label>
             <input
               type="text"
+              required
+              minLength={3}
               value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
+              onChange={(e) => {
+                setUsuario(e.target.value);
+                e.target.setCustomValidity("");
+
+                if (e.target.value.length < 3) {
+                  e.target.setCustomValidity(
+                    "El nombre debe tener mínimo 3 caracteres."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="Juan"
             />
           </div>
 
-          {/* Last name */}
+          {/* Apellidos */}
           <div>
             <label className="text-gray-700 text-sm font-medium">Apellidos</label>
             <input
               type="text"
+              required
+              minLength={3}
               value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
+              onChange={(e) => {
+                setApellido(e.target.value);
+                e.target.setCustomValidity("");
+
+                if (e.target.value.length < 3) {
+                  e.target.setCustomValidity(
+                    "El apellido debe tener mínimo 3 caracteres."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="Pérez López"
             />
@@ -151,39 +119,69 @@ export default function SignUp() {
 
           {/* Email */}
           <div>
-            <label className="text-gray-700 text-sm font-medium">Correo electrónico</label>
+            <label className="text-gray-700 text-sm font-medium">
+              Correo electrónico
+            </label>
             <input
               type="email"
+              required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                e.target.setCustomValidity("");
+
+                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!regex.test(e.target.value)) {
+                  e.target.setCustomValidity(
+                    "Incluye un signo '@' en la dirección de correo electrónico."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="correo@ejemplo.com"
             />
           </div>
 
-          {/* Birthdate */}
+          {/* Fecha Nacimiento */}
           <div>
             <label className="text-gray-700 text-sm font-medium">
               Fecha de nacimiento
             </label>
             <input
               type="date"
+              required
               value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-              className="w-full p-2 rounded bg-white border border-gray-300 focus:outline-none focus:border-blue-600
-              [color-scheme:white]
-              [&::-webkit-calendar-picker-indicator]"
+              onChange={(e) => {
+                setFechaNacimiento(e.target.value);
+                e.target.setCustomValidity("");
+              }}
+              className="w-full p-2 rounded bg-white border border-gray-300"
             />
           </div>
 
-          {/* Password */}
+          {/* Contraseña */}
           <div>
             <label className="text-gray-700 text-sm font-medium">Contraseña</label>
             <div className="relative">
               <input
                 type={mostrarContrasena ? "text" : "password"}
+                required
                 value={contrasena}
-                onChange={(e) => setContrasena(e.target.value)}
+                minLength={8}
+                onChange={(e) => {
+                  setContrasena(e.target.value);
+                  e.target.setCustomValidity("");
+
+                  const regex =
+                    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+                  if (!regex.test(e.target.value)) {
+                    e.target.setCustomValidity(
+                      "Debe tener 8 caracteres, una mayúscula y un símbolo especial."
+                    );
+                  }
+                }}
                 className="w-full mt-1 p-3 rounded-lg border border-gray-300 pr-10"
                 placeholder="********"
               />
@@ -197,7 +195,7 @@ export default function SignUp() {
             </div>
           </div>
 
-          {/* Confirm password */}
+          {/* Confirmar Contraseña */}
           <div>
             <label className="text-gray-700 text-sm font-medium">
               Confirmar contraseña
@@ -205,8 +203,16 @@ export default function SignUp() {
             <div className="relative">
               <input
                 type={mostrarConfirmarContrasena ? "text" : "password"}
+                required
                 value={confirmarContrasena}
-                onChange={(e) => setConfirmarContrasena(e.target.value)}
+                onChange={(e) => {
+                  setConfirmarContrasena(e.target.value);
+                  e.target.setCustomValidity("");
+
+                  if (e.target.value !== contrasena) {
+                    e.target.setCustomValidity("Las contraseñas no coinciden.");
+                  }
+                }}
                 className="w-full mt-1 p-3 rounded-lg border border-gray-300 pr-10"
                 placeholder="********"
               />
@@ -226,7 +232,7 @@ export default function SignUp() {
             </div>
           </div>
 
-          {/* Error messages */}
+          {/* Errores del backend */}
           {errores.length > 0 && (
             <div className="bg-red-100 border border-red-400 rounded p-3 text-red-600 text-sm">
               {errores.map((err, i) => (
@@ -235,7 +241,7 @@ export default function SignUp() {
             </div>
           )}
 
-          {/* Submit button */}
+          {/* botón */}
           <button
             type="submit"
             className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-semibold transition"
@@ -243,7 +249,6 @@ export default function SignUp() {
             Registrarse
           </button>
 
-          {/* Redirect to login */}
           <p className="text-center text-sm text-gray-500 mt-2">
             ¿Ya tienes una cuenta?{" "}
             <Link to="/sign_in" className="text-blue-700 hover:underline">

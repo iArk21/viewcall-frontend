@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, Users, Clock, Plus, ArrowLeft } from "lucide-react";
+import { Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createMeeting } from "../services/Firebaseapi"; //
 
@@ -9,14 +9,12 @@ import { getAuthToken } from '../services/authToken';
 export default function CreateMeeting() {
   const [ ] = useState(() => getAuthToken() ?? '');
   const [meetingName, setMeetingName] = useState("");
-  const [meetingDate, setMeetingDate] = useState("");
-  const [meetingTime, setMeetingTime] = useState("");
   const [generatedCode, ] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
 const handleCreateMeeting = async () => {
-  if (!meetingName || !meetingDate || !meetingTime) {
+  if (!meetingName) {
     alert("Completa todos los campos.");
     return;
   }
@@ -24,8 +22,6 @@ const handleCreateMeeting = async () => {
   try {
     const meetingData = {
       title: meetingName,
-      date: meetingDate,
-      time: meetingTime,
     };
 
     // ÚNICA petición: usa tu API helper
@@ -82,63 +78,6 @@ const handleCreateMeeting = async () => {
             />
           </div>
 
-          {/* Fecha */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-500 flex items-center gap-2">
-              <CalendarDays size={18} /> Fecha
-            </label>
-            <input
-              type="date"
-              value={meetingDate}
-              onChange={(e) => setMeetingDate(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Hora */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-500 flex items-center gap-2">
-              <Clock size={18} /> Hora
-            </label>
-            <input
-              type="time"
-              value={meetingTime}
-              onChange={(e) => setMeetingTime(e.target.value)}
-              className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Participantes */}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-500 flex items-center gap-2">
-              <Users size={18} /> Participantes
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                placeholder="Correo del participante"
-                
-                onChange={(e) => (e.target.value)}
-                className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                
-                className="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition text-white"
-              >
-                <Plus size={20} />
-              </button>
-            
-            </div>
-            {/*
-            {participants.length > 0 && (
-              <ul className="mt-2 text-sm text-gray-600 space-y-1">
-                {participants.map((p, idx) => (
-                  <li key={idx}>• {p}</li>
-                ))}
-              </ul>
-            )}*/}
-          </div>
-  
           {/* Crear reunión */}
           <button
             onClick={handleCreateMeeting}

@@ -304,7 +304,7 @@ const SignIn: React.FC = () => {
    hover:bg-gray-50 transition font-medium text-gray-700"
           >
             <img
-              src="https://www.svgrepo.com/show/448226/github.svg"
+              src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
               alt="Github"
               className="w-5 h-5"
             />

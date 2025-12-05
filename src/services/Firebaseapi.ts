@@ -187,8 +187,6 @@ export interface Meeting {
 
 export interface CreateMeetingPayload {
   title: string;
-  date: string;
-  time: string;
 }
 
 export const createMeeting = (payload: CreateMeetingPayload) =>
