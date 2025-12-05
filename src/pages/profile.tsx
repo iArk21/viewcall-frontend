@@ -245,7 +245,7 @@ const handleSave = async () => {
           {/* Back button */}
           <button
             onClick={() => navigate("/home")}
-            className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition mb-6 font-medium"
+            className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition mb-6 font-medium cursor-pointer"
             aria-label="Volver al inicio"
           >
             <ArrowLeft size={20} />
@@ -463,14 +463,14 @@ const handleSave = async () => {
           <div className="flex flex-col gap-3">
             <button
               onClick={handleSave}
-              className="w-full py-3 mt-2 bg-blue-700 hover:bg-blue-800 transition text-white rounded-lg font-semibold"
+              className="w-full py-3 mt-2 bg-blue-700 hover:bg-blue-800 transition text-white rounded-lg font-semibold cursor-pointer"
             >
               Guardar cambios
             </button>
 
             <button
               onClick={handleDelete}
-              className="w-full py-3 bg-red-700 hover:bg-red-600 text-white rounded-xl font-semibold transition shadow-md"
+              className="w-full py-3 bg-red-700 hover:bg-red-600 text-white rounded-xl font-semibold transition shadow-md cursor-pointer"
             >
               Eliminar cuenta
             </button>

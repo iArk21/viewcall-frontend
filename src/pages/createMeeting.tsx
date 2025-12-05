@@ -47,7 +47,7 @@ const handleCreateMeeting = async () => {
         {/* Botón de volver */}
         <button
           onClick={() => navigate("/home")}
-          className="absolute top-5 left-5 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
+          className="absolute top-5 left-5 p-2 bg-gray-200 hover:bg-gray-300 rounded-full transition cursor-pointer"
         >
           <ArrowLeft size={20} />
         </button>
@@ -81,14 +81,14 @@ const handleCreateMeeting = async () => {
           {/* Crear reunión */}
           <button
             onClick={handleCreateMeeting}
-            className="w-full py-3 mt-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+            className="w-full py-3 mt-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition cursor-pointer"
           >
             Crear Reunión
           </button>
 
           {/* Código generado */}
           {generatedCode && (
-            <div className="mt-4 text-center text-black bg-gray-100 rounded-lg p-3 font-semibold shadow-md">
+            <div className="mt-4 text-center text-black bg-gray-100 rounded-lg p-3 font-semibold shadow-md cursor-pointer">
               Código de reunión: <span>{generatedCode}</span>
             </div>
           )}

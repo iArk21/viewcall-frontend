@@ -174,29 +174,32 @@ export default function Navbar() {
           <div className="flex flex-col gap-2 p-4">
 
             {/* Profile */}
-            <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-              <button className="flex items-center gap-3 w-full text-gray-800 py-3 px-4 rounded-lg hover:bg-[#eef1ff] transition">
-                <User size={18} /> Profile
+            <Link to="/profile" aria-label="Go to user profile">
+              <button className="p-2 bg-white border border-gray-300 rounded-full hover:bg-[#d6dbff] transition cursor-pointer">
+                <User size={18} className="text-[#1a1a1a]" />
               </button>
             </Link>
 
             {/* Shortcuts */}
             <button
               onClick={toggleShortcuts}
-              className="flex items-center gap-3 w-full py-3 px-4 text-gray-800 rounded-lg hover:bg-[#eef1ff] transition"
+              aria-pressed={shortcutsEnabled}
+              className={`p-2 rounded-full border cursor-pointer ${
+                shortcutsEnabled
+                  ? "bg-green-500 text-white border-green-600"
+                  : "bg-white border-gray-300 text-gray-600"
+              } hover:opacity-90 transition`}
             >
-              <Keyboard size={18} /> System Shortcuts
+              <Keyboard size={18} />
             </button>
 
             {/* Logout */}
             <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                handleLogout();
-              }}
-              className="flex items-center gap-3 w-full py-3 px-4 text-red-600 rounded-lg hover:bg-red-100 transition"
+              onClick={handleLogout}
+              className="p-2 bg-red-500 text-white hover:bg-red-600 rounded-full transition cursor-pointer"
+              aria-label="Logout"
             >
-              <LogOut size={18} /> Logout
+              <LogOut size={18} />
             </button>
           </div>
         </div>

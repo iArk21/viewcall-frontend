@@ -6,62 +6,37 @@ import { useState } from "react";
 
 import { getMeeting } from "../services/Firebaseapi";
 
-/**
- * Home Page Component
- * 
- * This component represents the landing page of the application.
- * It displays navigation, a hero section, quick-action buttons,
- * and a footer. Users can create a meeting or enter a meeting code.
- *
- * @component
- * @returns {JSX.Element} The rendered Home page UI.
- */
 export default function Home() {
-  /**
-   * Meeting code state
-   * @type {[string, Function]}
-   * 
-   * Stores user input when typing a meeting code in the hero section.
-   */
+
   const [code, setCode] = useState("");
 
   return (
     <div className="flex flex-col min-h-screen bg-[#eef1ff]">
-      {/* Top Navigation Bar */}
       <Navbar />
 
       {/* HERO SECTION */}
       <section className="flex flex-col items-center text-center mt-12 px-4">
+        
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800 drop-shadow">
           Videoconferencias seguras para todos
         </h1>
 
-        <p className="text-gray-600 mt-2 text-lg">
-          Conecta, colabora y celebra desde cualquier lugar
-        </p>
+       
 
         {/* TOP ACTION BUTTONS */}
-        <div className="flex gap-4 mt-6">
-          {/* Create New Meeting Button */}
-          <Link
-            to="/create-meeting"
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold shadow"
-          >
-            📹 Nueva reunión
-          </Link>
+        <div className="flex flex-col md:flex-row items-center gap-4 mt-6">
 
-          {/* Input to Join Meeting with Code */}
-          <div className="flex items-center bg-white border border-gray-300 px-4 py-3 rounded-xl">
+          {/* Input + botón unirse */}
+          <div className="flex items-center bg-white border border-gray-300 px-4 py-3 rounded-xl shadow">
             <Calendar className="text-[#345CFF]" size={20} />
 
             <input
-              className="ml-2 focus:outline-none"
+              className="ml-2 focus:outline-none bg-transparent"
               placeholder="Introducir código"
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
 
-            {/* Botón para ingresar a la reunión */}
             <button
               onClick={async () => {
                 if (!code.trim()) {
@@ -70,19 +45,17 @@ export default function Home() {
                 }
                 try {
                   const res = await getMeeting(code);
-
                   if (!res) {
                     alert("El código no existe. Verifica e inténtalo de nuevo.");
                     return;
                   }
-
                   window.location.href = `/meeting/${code}`;
                 } catch (error) {
                   console.error("Error verificando reunión:", error);
                   alert("No se pudo verificar el código con el servidor.");
                 }
               }}
-              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700"
+              className="ml-3 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer"
             >
               Unirse
             </button>
@@ -90,35 +63,32 @@ export default function Home() {
 
         </div>
 
-        {/* MAIN ICON BUTTONS */}
-        <div className="bg-white p-6 rounded-3xl shadow-lg mt-10 flex gap-6">
-          {/**
-           * Participant Icon Button
-           * Represents user or group-related action.
-           */}
-          <button className="bg-yellow-400 w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl shadow">
-            👥
-          </button>
+        {/* HERO IMAGE SECTION — DEBE IR FUERA DEL BLOQUE DE BOTONES */}
+        <div className="mt-14 w-full max-w-4xl relative rounded-3xl overflow-hidden shadow-xl">
+          <img
+            src="https://images.unsplash.com/photo-1590650046871-92c887180603?auto=format&fit=crop&w=1400&q=80"
+            alt="Video conference"
+            className="w-full h-80 object-cover brightness-75"
+          />
 
-          {/**
-           * Video Icon Button
-           * Represents video-call actions.
-           */}
-          <button className="bg-blue-500 w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl shadow">
-            🎥
-          </button>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+            <h2 className="text-4xl font-bold drop-shadow">
+              Conecta. Comparte. Colabora.
+            </h2>
 
-          {/**
-           * Chat Icon Button
-           * Represents messaging or communication features.
-           */}
-          <button className="bg-green-500 w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl shadow">
-            💬
-          </button>
+            <p className="mt-3 max-w-xl text-lg drop-shadow">
+              La nueva forma inteligente de comunicarte con tu equipo y amigos.
+            </p>
+
+            <Link to="/create-meeting">
+              <button className="mt-6 bg-blue-600 px-6 py-3 rounded-xl shadow hover:bg-blue-700 transition cursor-pointer">
+                Iniciar reunión
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Footer Section */}
       <Footer />
     </div>
   );

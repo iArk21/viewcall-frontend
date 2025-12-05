@@ -62,52 +62,46 @@ const ControlBar = ({
       {/* Mic */}
       <button
         onClick={toggleMic}
-        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
-        <Mic 
-          className={micOn ? "text-white" : "text-red-500"} 
-        />
+        <Mic className={micOn ? "text-white" : "text-red-500"} />
       </button>
 
-      {/* Cámara */}
       <button
         onClick={() => setCameraOn(!cameraOn)}
-        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
         <Video />
       </button>
 
-      {/* Compartir pantalla */}
       <button
         onClick={() => setScreenSharing(!screenSharing)}
-        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
         <Monitor />
       </button>
 
-      {/* Participantes */}
       <button
         onClick={() => setIsParticipantsOpen((s) => !s)}
-        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
         <Users />
       </button>
 
-      {/* Chat */}
       <button
         onClick={() => setIsChatOpen((s) => !s)}
-        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
         <MessageCircle />
       </button>
 
-      {/* Colgar */}
       <button
         onClick={handleLeaveCall}
-        className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center"
+        className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center cursor-pointer"
       >
         <PhoneOff />
       </button>
+
     </div>
   );
 };

@@ -4,17 +4,17 @@ import { useNavigate } from "react-router-dom";
 /**
  * About component
  * 
- * Displays information about the ViewCall project, including:
- * - Project description
- * - Team members
- * - Mission
- * - Contact information
+ * Muestra información del proyecto ViewCall, incluyendo:
+ * - Descripción del proyecto
+ * - Integrantes del equipo
+ * - Misión
+ * - Información de contacto
  * 
- * This page is part of the academic project "Proyecto Integrador 1"
- * for Universidad del Valle — Sede Yumbo.
+ * Esta página hace parte del proyecto académico "Proyecto Integrador 1"
+ * para la Universidad del Valle — Sede Yumbo.
  * 
  * @component
- * @returns {JSX.Element} The rendered About page
+ * @returns {JSX.Element} Página About renderizada
  */
 const About: React.FC = () => {
   const navigate = useNavigate();
@@ -29,8 +29,8 @@ const About: React.FC = () => {
           {/* Back button */}
           <button
             onClick={() => navigate(-1)}
-            className="text-gray-400 hover:text-white transition-colors mr-4"
-            aria-label="Go back"
+            className="text-gray-400 hover:text-white transition-colors mr-4 cursor-pointer"
+            aria-label="Regresar"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -68,40 +68,40 @@ const About: React.FC = () => {
           </h2>
 
           <p className="text-xl text-gray-300">
-            Connecting people with a modern video call experience.
+            Conectando personas con una experiencia moderna de videollamadas.
           </p>
         </div>
 
         {/* Academic project description */}
         <section className="bg-[#20242E] rounded-2xl p-8 mb-8 border border-white/10">
           <h3 className="text-2xl font-bold mb-4 text-blue-400">
-            Academic Project
+            Proyecto Académico
           </h3>
 
           <p className="text-gray-300 leading-relaxed mb-4">
-            ViewCall is a platform developed by students of{" "}
+            ViewCall es una plataforma desarrollada por estudiantes de la{" "}
             <span className="text-blue-400 font-semibold">
-              Universidad del Valle — Yumbo Campus
+              Universidad del Valle — Sede Yumbo
             </span>{" "}
-            as part of the{" "}
-            <span className="text-blue-400 font-semibold">Proyecto Integrador 1</span> course.
+            como parte del curso{" "}
+            <span className="text-blue-400 font-semibold">Proyecto Integrador 1</span>.
           </p>
 
           <p className="text-gray-300 leading-relaxed">
-            This project applies knowledge in web development, UX/UI,
-            modern technologies and digital communication to build a scalable
-            and functional solution for video calls and virtual meetings.
+            Este proyecto aplica conocimientos en desarrollo web, UX/UI,
+            tecnologías modernas y comunicación digital para construir una
+            solución escalable y funcional para videollamadas y reuniones virtuales.
           </p>
         </section>
 
         {/* Team section */}
         <section className="bg-[#20242E] rounded-2xl p-8 mb-8 border border-white/10">
           <h3 className="text-2xl font-bold mb-6 text-blue-400 text-center">
-            Our Team
+            Nuestro Equipo
           </h3>
 
           <p className="text-gray-300 text-center mb-8">
-            Project developed by:
+            Proyecto desarrollado por:
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -114,7 +114,7 @@ const About: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">Diego Betancourt</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -127,7 +127,7 @@ const About: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">Yancarlo Ospina</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -139,8 +139,8 @@ const About: React.FC = () => {
                   AM
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg">Andres Mesa</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <h4 className="font-bold text-lg">Andrés Mesa</h4>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -153,7 +153,7 @@ const About: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">Juan Manuel Mena</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -165,8 +165,8 @@ const About: React.FC = () => {
                   DP
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg">Diego Payan</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <h4 className="font-bold text-lg">Diego Payán</h4>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -179,7 +179,7 @@ const About: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg">Cristian Velasco</h4>
-                  <p className="text-gray-400 text-sm">Developer</p>
+                  <p className="text-gray-400 text-sm">Desarrollador</p>
                 </div>
               </div>
             </div>
@@ -190,25 +190,25 @@ const About: React.FC = () => {
         {/* Mission */}
         <section className="bg-[#20242E] rounded-2xl p-8 mb-8 border border-white/10">
           <h3 className="text-2xl font-bold mb-4 text-blue-400">
-            Our Mission
+            Nuestra Misión
           </h3>
 
           <p className="text-gray-300 leading-relaxed">
-            At ViewCall we believe virtual meetings should be simple, intuitive,
-            and accessible. Our mission is to deliver a smooth video call 
-            experience focused on usability, speed, and modern tools without 
-            complexity.
+            En ViewCall creemos que las reuniones virtuales deben ser simples,
+            intuitivas y accesibles. Nuestra misión es ofrecer una experiencia
+            de videollamada fluida, enfocada en la usabilidad, velocidad y
+            herramientas modernas sin complejidad.
           </p>
         </section>
 
         {/* Contact */}
         <section className="bg-[#20242E] rounded-2xl p-8 border border-white/10">
           <h3 className="text-2xl font-bold mb-4 text-blue-400">
-            Contact Us
+            Contáctanos
           </h3>
 
           <p className="text-gray-300 mb-4">
-            Do you have suggestions or feedback? We would love to hear from you!
+            ¿Tienes sugerencias o comentarios? ¡Nos encantaría escucharte!
           </p>
 
           <div className="space-y-2 text-gray-400">

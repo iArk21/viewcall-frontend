@@ -36,7 +36,7 @@ export default function MeetingRoom() {
             navigator.clipboard.writeText(roomId || "");
             alert("Código copiado al portapapeles ✓");
           }}
-          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
         >
           Copiar código
         </button>

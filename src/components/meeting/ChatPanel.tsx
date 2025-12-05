@@ -101,7 +101,7 @@ export default function ChatPanel({ roomId, username }: ChatPanelProps) {
           className="flex-1 bg-[#161A21] px-3 py-2 rounded-lg"
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
-        <button onClick={send} className="bg-blue-600 p-2 rounded-lg">
+        <button onClick={send} className="bg-blue-600 p-2 rounded-lg cursor-pointer">
           <SendHorizontal />
         </button>
       </div>
