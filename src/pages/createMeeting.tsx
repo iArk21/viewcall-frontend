@@ -27,8 +27,6 @@ const handleCreateMeeting = async () => {
     // ÚNICA petición: usa tu API helper
     const res = await createMeeting(meetingData);
 
-    console.log("Meeting created:", res);
-
     const meetingId = res.meeting.id;
 
     navigate(`/meeting/${meetingId}`);

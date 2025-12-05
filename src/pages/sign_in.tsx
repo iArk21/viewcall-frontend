@@ -50,10 +50,12 @@ const SignIn: React.FC = () => {
 
       const user = result.user;
 
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
 
-
-      localStorage.setItem("token", "google_login");
       localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
+      
       navigate("/home");
     } catch (error) {
       console.error(error);
@@ -69,8 +71,11 @@ const SignIn: React.FC = () => {
 
       const user = result.user;
 
-      localStorage.setItem("token", "facebook_login");
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
+
       localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
 
       navigate("/home");
     } catch (error) {
@@ -87,9 +92,12 @@ const SignIn: React.FC = () => {
 
       const user = result.user;
 
-      localStorage.setItem("token", "github_login");
-      localStorage.setItem("email", user.email || "");
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
 
+      localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
+      
       navigate("/home");
     } catch (error) {
       console.error(error);
