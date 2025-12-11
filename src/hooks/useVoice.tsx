@@ -30,7 +30,7 @@ interface PeersMap {
   };
 }
 
-export default function useVoice({ roomId, userInfo, micEnabled = true }: UseVoiceProps) {
+export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
   const [micOn, setMicOn] = useState(micEnabled);
   const socketRef = useRef<Socket | null>(null);
   const peersRef = useRef<PeersMap>({});
