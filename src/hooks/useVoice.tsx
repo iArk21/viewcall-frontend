@@ -1,315 +1,283 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import Peer from "peerjs";
-import {
-  connectVoiceSocket,
-  disconnectVoiceSocket,
-  joinVoiceRoom,
-  toggleVoiceMic,
-  onVoiceExistingUsers,
-  onVoiceUserJoined,
-  onVoiceUserLeft,
-  onVoiceOffer,
-  onVoiceAnswer,
-  onVoiceIceCandidate,
-  onVoiceMicUpdated,
-  onVoiceRoomFull,
-  onVoiceSocketConnect,
-  onVoiceSocketDisconnect,
-  onVoiceSocketError,
-} from "../services/voiceSocket";
-import type { VoiceUserInfo, VoiceParticipant } from "../services/voiceSocket";
+import { useState, useEffect, useRef, useCallback } from "react";
+import io, { Socket } from "socket.io-client";
+import Peer from "simple-peer";
 
-/**
- * Custom hook for managing voice communication using WebRTC and PeerJS.
- * Handles peer connections, audio streams, and socket signaling.
- */
-export default function useVoice({
-  roomId,
-  userInfo,
-  micEnabled = true,
-}: {
+// URLs and credentials for WebRTC and ICE servers
+const serverWebRTCUrl = import.meta.env.VITE_WEBRTC_URL;
+const iceServerUrl = import.meta.env.VITE_ICE_SERVER_URL;
+const iceServerUsername = import.meta.env.VITE_ICE_SERVER_USERNAME;
+const iceServerCredential = import.meta.env.VITE_ICE_SERVER_CREDENTIAL;
+
+interface UserInfo {
+  userId: string;
+  displayName: string;
+  peerId: string;
+}
+
+interface UseVoiceProps {
   roomId: string;
-  userInfo: VoiceUserInfo;
+  userInfo: UserInfo;
   micEnabled?: boolean;
-}) {
-  const [connected, setConnected] = useState(false);
-  const [participants, setParticipants] = useState<VoiceParticipant[]>([]);
-  const [peerConnections, setPeerConnections] = useState<Map<string, any>>(new Map());
-  const [audioStreams, setAudioStreams] = useState<Map<string, MediaStream>>(new Map());
-  const [micOn, setMicOn] = useState(micEnabled);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+}
 
-  const peerRef = useRef<Peer | null>(null);
+interface PeerInstance extends Peer.Instance {
+  // Add any custom properties if needed, otherwise Peer.Instance covers it
+}
+
+interface PeersMap {
+  [key: string]: {
+    peerConnection: PeerInstance;
+  };
+}
+
+export default function useVoice({ roomId, userInfo, micEnabled = true }: UseVoiceProps) {
+  const [micOn, setMicOn] = useState(micEnabled);
+  const socketRef = useRef<Socket | null>(null);
+  const peersRef = useRef<PeersMap>({});
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  // STUN server configuration
-  const iceServers = [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-  ];
+  // Helper to create audio elements (kept from original logic)
+  const createClientMediaElements = (peerId: string) => {
+    const existingAudio = document.getElementById(`${peerId}_audio`);
+    if (existingAudio) return;
 
-  /**
-   * Initializes local media stream (microphone).
-   */
-  const initializeLocalStream = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-        video: false,
-      });
+    const audioEl = document.createElement("audio");
+    audioEl.id = `${peerId}_audio`;
+    audioEl.controls = false;
+    audioEl.volume = 1;
+    document.body.appendChild(audioEl);
 
-      localStreamRef.current = stream;
-      setLocalStream(stream);
+    audioEl.addEventListener("loadeddata", () => {
+      audioEl.play().catch((e) => console.error("Error playing audio:", e));
+    });
+  };
 
-      // Enable/disable audio track based on mic state
-      stream.getAudioTracks().forEach(track => {
-        track.enabled = micOn;
-      });
-
-      return stream;
-    } catch (error) {
-      console.error("Error accessing microphone:", error);
-      return null;
+  const updateClientMediaElements = (peerId: string, stream: MediaStream) => {
+    const audioEl = document.getElementById(`${peerId}_audio`) as HTMLAudioElement;
+    if (audioEl) {
+      audioEl.srcObject = new MediaStream([stream.getAudioTracks()[0]]);
+      audioEl.play().catch((e) => console.error("Error playing audio stream:", e));
     }
-  }, [micOn]);
+  };
 
-  /**
-   * Initializes PeerJS peer.
-   */
-  const initializePeer = useCallback(() => {
-    const peer = new Peer(userInfo.peerId, {
-      host: import.meta.env.VITE_VOICE_PEER_HOST || "localhost",
-      port: Number(import.meta.env.VITE_VOICE_PEER_PORT) || 4000,
-      path: import.meta.env.VITE_VOICE_PEER_PATH || "/peerjs",
+  const removeClientAudioElement = (peerId: string) => {
+    const audioEl = document.getElementById(`${peerId}_audio`);
+    if (audioEl) {
+      audioEl.remove();
+    }
+  };
+
+  const getIceServers = () => {
+    const iceServers: RTCIceServer[] = [];
+
+    if (iceServerUrl) {
+      const urls = iceServerUrl
+        .split(",")
+        .map((url: string) => url.trim())
+        .filter(Boolean)
+        .map((url: string) => {
+          if (!/^stun:|^turn:|^turns:/.test(url)) {
+            return `turn:${url}`;
+          }
+          return url;
+        });
+
+      urls.forEach((url: string) => {
+        const serverConfig: RTCIceServer = { urls: url };
+        if (iceServerUsername) {
+          serverConfig.username = iceServerUsername;
+        }
+        if (iceServerCredential) {
+          serverConfig.credential = iceServerCredential;
+        }
+        iceServers.push(serverConfig);
+      });
+    }
+
+    if (!iceServers.length) {
+      iceServers.push({ urls: "stun:stun.l.google.com:19302" });
+    } else {
+      // Ensure there is at least one TURN server if possible, or fallback/add STUN
+      // Original logic check:
+      const hasTurn = iceServers.some((server) => {
+        const urls = Array.isArray(server.urls) ? server.urls : [server.urls];
+        return urls.some((url) => url.startsWith("turn:") || url.startsWith("turns:"));
+      });
+      if (!hasTurn) {
+        iceServers.push({ urls: "stun:stun.l.google.com:19302" });
+      }
+    }
+    return iceServers;
+  };
+
+  const createPeerConnection = (theirSocketId: string, isInitiator = false, socket: Socket) => {
+    const peerConnection = new Peer({
+      initiator: isInitiator,
       config: {
-        iceServers,
+        iceServers: getIceServers(),
       },
+    }) as PeerInstance;
+
+    peerConnection.on("signal", (data) => {
+      socket.emit("signal", theirSocketId, socket.id, data);
     });
 
-    peerRef.current = peer;
-
-    peer.on("open", (id) => {
-      console.log("PeerJS connected with ID:", id);
-    });
-
-    peer.on("call", async (call) => {
-      console.log("Incoming call from:", call.peer);
-
-      const stream = localStreamRef.current || await initializeLocalStream();
-      if (stream) {
-        call.answer(stream);
-
-        call.on("stream", (remoteStream) => {
-          console.log("Received remote stream from:", call.peer);
-          setAudioStreams(prev => new Map(prev.set(call.peer, remoteStream)));
-        });
-
-        call.on("close", () => {
-          console.log("Call closed with:", call.peer);
-          setAudioStreams(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(call.peer);
-            return newMap;
-          });
-          setPeerConnections(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(call.peer);
-            return newMap;
-          });
-        });
-
-        call.on("error", (error) => {
-          console.error("Call error:", error);
-        });
-
-        setPeerConnections(prev => new Map(prev.set(call.peer, call)));
+    peerConnection.on("connect", () => {
+      // Add local stream to peer connection
+      if (localStreamRef.current) {
+        peerConnection.addStream(localStreamRef.current);
       }
     });
 
-    peer.on("error", (error) => {
-      console.error("PeerJS error:", error);
+    peerConnection.on("stream", (stream) => {
+      updateClientMediaElements(theirSocketId, stream);
     });
 
-    return peer;
-  }, [userInfo.peerId, iceServers, initializeLocalStream]);
-
-  /**
-   * Calls a remote peer.
-   */
-  const callPeer = useCallback(async (peerId: string) => {
-    if (!peerRef.current || !localStreamRef.current) return;
-
-    console.log("Calling peer:", peerId);
-
-    const call = peerRef.current.call(peerId, localStreamRef.current);
-
-    call.on("stream", (remoteStream) => {
-      console.log("Received remote stream from:", peerId);
-      setAudioStreams(prev => new Map(prev.set(peerId, remoteStream)));
+    peerConnection.on("error", (err) => {
+      console.error("Peer connection error:", err);
     });
 
-    call.on("close", () => {
-      console.log("Call closed with:", peerId);
-      setAudioStreams(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(peerId);
-        return newMap;
-      });
-      setPeerConnections(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(peerId);
-        return newMap;
-      });
-    });
+    return peerConnection;
+  };
 
-    call.on("error", (error) => {
-      console.error("Call error:", error);
-    });
-
-    setPeerConnections(prev => new Map(prev.set(peerId, call)));
-  }, []);
-
-  /**
-   * Toggles microphone on/off.
-   */
-  const toggleMic = useCallback(() => {
-    const newMicState = !micOn;
-    setMicOn(newMicState);
-
-    // Update local stream tracks
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach(track => {
-        track.enabled = newMicState;
-      });
-    }
-
-    // Notify other peers via socket
-    toggleVoiceMic({ roomId, enabled: newMicState });
-  }, [micOn, roomId]);
-
-  /**
-   * Leaves the voice room and cleans up connections.
-   */
-  const leaveVoiceRoom = useCallback(() => {
-    // Close all peer connections
-    peerConnections.forEach(call => call.close());
-
-    // Stop local stream
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
-    }
-
-    // Disconnect socket
-    disconnectVoiceSocket();
-
-    // Destroy peer
-    if (peerRef.current) {
-      peerRef.current.destroy();
-    }
-
-    // Reset state
-    setConnected(false);
-    setParticipants([]);
-    setPeerConnections(new Map());
-    setAudioStreams(new Map());
-    setLocalStream(null);
-    localStreamRef.current = null;
-    peerRef.current = null;
-  }, [peerConnections]);
-
-  // Initialize on mount
   useEffect(() => {
-    const init = async () => {
-      // Initialize local stream
-      await initializeLocalStream();
+    let myStream: MediaStream | null = null;
+    let mySocket: Socket | null = null;
+    let myPeers: PeersMap = {};
+    let isMounted = true;
 
-      // Initialize PeerJS
-      initializePeer();
+    async function init() {
+      if (!Peer.WEBRTC_SUPPORT) {
+        console.warn("WebRTC is not supported in this browser.");
+        return;
+      }
 
-      // Connect socket
-      connectVoiceSocket();
+      try {
+        // 1. Get User Media
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Set up socket event listeners
-      const unsubscribers = [
-        onVoiceSocketConnect(() => {
-          console.log("Voice socket connected");
-          setConnected(true);
-          joinVoiceRoom(roomId, userInfo);
-        }),
-        onVoiceSocketDisconnect(() => {
-          console.log("Voice socket disconnected");
-          setConnected(false);
-        }),
-        onVoiceSocketError((error) => {
-          console.error("Voice socket error:", error);
-        }),
-        onVoiceExistingUsers((users) => {
-          console.log("Existing voice users:", users);
-          setParticipants(users);
-          // Call existing users
-          users.forEach(user => {
-            if (user.userInfo.peerId !== userInfo.peerId) {
-              callPeer(user.userInfo.peerId);
+        if (!isMounted) {
+          // If unmounted while waiting for user media, stop stream immediately
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        myStream = stream;
+        localStreamRef.current = stream;
+
+        if (!micEnabled) {
+          stream.getTracks().forEach(track => track.enabled = false);
+        }
+
+        // 2. Connect Socket
+        mySocket = io(serverWebRTCUrl);
+        socketRef.current = mySocket;
+
+        // Use local variable 'mySocket' for listeners to avoid closure staleness (though strictly not needed if we rely on isMounted logic, but good practice)
+        mySocket.on("introduction", (otherClientIds: string[]) => {
+          otherClientIds.forEach((theirId) => {
+            if (theirId !== mySocket?.id) {
+              const peer = createPeerConnection(theirId, true, mySocket!);
+              myPeers[theirId] = { peerConnection: peer };
+              peersRef.current[theirId] = { peerConnection: peer }; // Keep ref synced
+              createClientMediaElements(theirId);
             }
           });
-        }),
-        onVoiceUserJoined((data) => {
-          console.log("Voice user joined:", data);
-          setParticipants(prev => [...prev, data]);
-          // Call the new user
-          callPeer(data.userInfo.peerId);
-        }),
-        onVoiceUserLeft((data) => {
-          console.log("Voice user left:", data);
-          setParticipants(prev => prev.filter(p => p.socketId !== data.socketId));
-          // Connection cleanup is handled in call.on("close")
-        }),
-        onVoiceOffer((data) => {
-          // Handle incoming offers (PeerJS handles this automatically)
-          console.log("Received voice offer from:", data.fromPeerId);
-        }),
-        onVoiceAnswer((data) => {
-          // Handle incoming answers (PeerJS handles this automatically)
-          console.log("Received voice answer from:", data.fromPeerId);
-        }),
-        onVoiceIceCandidate((data) => {
-          // Handle ICE candidates (PeerJS handles this automatically)
-          console.log("Received ICE candidate from:", data.fromPeerId);
-        }),
-        onVoiceMicUpdated((data) => {
-          console.log("Mic updated:", data);
-          // Could update UI to show mic status
-        }),
-        onVoiceRoomFull(() => {
-          console.warn("Voice room is full");
-          alert("La sala de voz está llena");
-        }),
-      ];
+        });
 
-      return () => {
-        unsubscribers.forEach(unsub => unsub());
-      };
-    };
+        mySocket.on("newUserConnected", (theirId: string) => {
+          if (theirId !== mySocket?.id && !(theirId in myPeers)) {
+            myPeers[theirId] = {} as any;
+            peersRef.current[theirId] = {} as any;
+            createClientMediaElements(theirId);
+          }
+        });
 
+        mySocket.on("userDisconnected", (_id: string) => {
+          if (_id !== mySocket?.id) {
+            removeClientAudioElement(_id);
+            if (myPeers[_id]?.peerConnection) {
+              myPeers[_id].peerConnection.destroy();
+            }
+            delete myPeers[_id];
+            delete peersRef.current[_id];
+          }
+        });
+
+        mySocket.on("signal", (to: string, from: string, data: any) => {
+          if (to !== mySocket?.id) return;
+
+          let peerObj = myPeers[from];
+          if (peerObj && peerObj.peerConnection) {
+            peerObj.peerConnection.signal(data);
+          } else {
+            // Create receive-only peer
+            const peerConnection = createPeerConnection(from, false, mySocket!);
+            myPeers[from] = { peerConnection };
+            peersRef.current[from] = { peerConnection };
+            peerConnection.signal(data);
+          }
+        });
+
+      } catch (error) {
+        console.error("Failed to initialize WebRTC:", error);
+      }
+    }
+
+    // Initialize
     init();
 
-    // Cleanup on unmount
     return () => {
-      leaveVoiceRoom();
+      isMounted = false;
+
+      if (mySocket) {
+        mySocket.disconnect();
+        mySocket = null;
+      }
+
+      if (myStream) {
+        myStream.getTracks().forEach((track) => track.stop());
+        myStream = null;
+      }
+
+      // Cleanup peers created in this effect
+      Object.keys(myPeers).forEach((peerId) => {
+        const p = myPeers[peerId];
+        if (p.peerConnection) p.peerConnection.destroy();
+        removeClientAudioElement(peerId);
+      });
+      myPeers = {};
+
+      // Also clear refs to be safe, though they might be overwritten by next effect
+      socketRef.current = null;
+      localStreamRef.current = null;
+      peersRef.current = {};
     };
-  }, [roomId, userInfo, initializeLocalStream, initializePeer, callPeer, leaveVoiceRoom]);
+  }, [roomId]);
+
+  const toggleMic = useCallback(() => {
+    if (localStreamRef.current) {
+      const audioTracks = localStreamRef.current.getAudioTracks();
+      if (audioTracks.length > 0) {
+        // Toggle enabled state
+        const newState = !micOn;
+        audioTracks.forEach((track) => {
+          track.enabled = newState;
+        });
+        setMicOn(newState);
+      }
+    }
+  }, [micOn]);
+
+  useEffect(() => {
+    // Sync micEnabled prop with state if it changes externally?
+    // Or just respect initial.
+    // MeetingRoom passes `micEnabled: true` and also passes `micOn` back to UI.
+    // We'll trust internal state `micOn`.
+  }, []);
 
   return {
-    connected,
-    participants,
-    audioStreams,
     micOn,
-    localStream,
     toggleMic,
-    leaveVoiceRoom,
   };
 }
