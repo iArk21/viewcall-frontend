@@ -18,6 +18,7 @@ interface UseVoiceProps {
   roomId: string;
   userInfo: UserInfo;
   micEnabled?: boolean;
+  cameraEnabled?: boolean;
 }
 
 interface PeerInstance extends Peer.Instance {
@@ -30,8 +31,12 @@ interface PeersMap {
   };
 }
 
-export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
+export default function useVoice({ roomId, micEnabled = true, cameraEnabled = true }: UseVoiceProps) {
   const [micOn, setMicOn] = useState(micEnabled);
+  const [cameraOn, setCameraOn] = useState(cameraEnabled);
+  const [screenSharing, setScreenSharing] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<{[key: string]: MediaStream}>({});
   const socketRef = useRef<Socket | null>(null);
   const peersRef = useRef<PeersMap>({});
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -130,6 +135,7 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
     });
 
     peerConnection.on("stream", (stream) => {
+      setRemoteStreams(prev => ({...prev, [theirSocketId]: stream}));
       updateClientMediaElements(theirSocketId, stream);
     });
 
@@ -154,7 +160,7 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
 
       try {
         // 1. Get User Media
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
 
         if (!isMounted) {
           // If unmounted while waiting for user media, stop stream immediately
@@ -164,9 +170,14 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
 
         myStream = stream;
         localStreamRef.current = stream;
+        setLocalStream(stream);
 
         if (!micEnabled) {
           stream.getTracks().forEach(track => track.enabled = false);
+        }
+
+        if (!cameraEnabled) {
+          stream.getVideoTracks().forEach(track => track.enabled = false);
         }
 
         // 2. Connect Socket
@@ -196,6 +207,7 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
         mySocket.on("userDisconnected", (_id: string) => {
           if (_id !== mySocket?.id) {
             removeClientAudioElement(_id);
+            setRemoteStreams(prev => { const newR = {...prev}; delete newR[_id]; return newR; });
             if (myPeers[_id]?.peerConnection) {
               myPeers[_id].peerConnection.destroy();
             }
@@ -269,6 +281,61 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
     }
   }, [micOn]);
 
+  const toggleCamera = useCallback(() => {
+    if (localStreamRef.current) {
+      const videoTracks = localStreamRef.current.getVideoTracks();
+      if (videoTracks.length > 0) {
+        // Toggle enabled state
+        const newState = !cameraOn;
+        videoTracks.forEach((track) => {
+          track.enabled = newState;
+        });
+        setCameraOn(newState);
+      }
+    }
+  }, [cameraOn]);
+
+  const toggleScreenShare = useCallback(async () => {
+    if (!screenSharing) {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+        const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
+        localStreamRef.current = newStream;
+        setLocalStream(newStream);
+        // Update peers
+        Object.values(peersRef.current).forEach(({ peerConnection }) => {
+          if (oldVideoTrack) peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
+        });
+        videoTrack.onended = () => {
+          toggleScreenShare();
+        };
+        setScreenSharing(true);
+      } catch (e) {
+        console.error("Error sharing screen:", e);
+      }
+    } else {
+      try {
+        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = cameraStream.getVideoTracks()[0];
+        const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+        const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
+        localStreamRef.current = newStream;
+        setLocalStream(newStream);
+        // Update peers
+        Object.values(peersRef.current).forEach(({ peerConnection }) => {
+          if (oldVideoTrack) peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
+        });
+        setScreenSharing(false);
+      } catch (e) {
+        console.error("Error switching to camera:", e);
+      }
+    }
+  }, [screenSharing]);
+
   useEffect(() => {
     // Sync micEnabled prop with state if it changes externally?
     // Or just respect initial.
@@ -279,5 +346,11 @@ export default function useVoice({ roomId, micEnabled = true }: UseVoiceProps) {
   return {
     micOn,
     toggleMic,
+    cameraOn,
+    toggleCamera,
+    screenSharing,
+    toggleScreenShare,
+    localStream,
+    remoteStreams,
   };
 }

@@ -19,9 +19,6 @@ export default function MeetingRoom() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(true);
 
-  const [cameraOn, setCameraOn] = useState(true);
-  const [screenSharing, setScreenSharing] = useState(false);
-
   // Generate unique peer ID for voice
   const peerId = `${username}-${Date.now()}`;
 
@@ -29,6 +26,12 @@ export default function MeetingRoom() {
   const {
     micOn,
     toggleMic,
+    cameraOn,
+    toggleCamera,
+    screenSharing,
+    toggleScreenShare,
+    localStream,
+    remoteStreams,
   } = useVoice({
     roomId: roomId!,
     userInfo: {
@@ -37,6 +40,7 @@ export default function MeetingRoom() {
       peerId,
     },
     micEnabled: true,
+    cameraEnabled: true,
   });
 
   return (
@@ -64,6 +68,8 @@ export default function MeetingRoom() {
           micOn={micOn}
           cameraOn={cameraOn}
           screenSharing={screenSharing}
+          localStream={localStream}
+          remoteStreams={remoteStreams}
         />
 
         <div className="w-80 flex flex-col gap-4">
@@ -78,9 +84,9 @@ export default function MeetingRoom() {
         micOn={micOn}
         setMicOn={toggleMic}
         cameraOn={cameraOn}
-        setCameraOn={setCameraOn}
+        setCameraOn={toggleCamera}
         screenSharing={screenSharing}
-        setScreenSharing={setScreenSharing}
+        setScreenSharing={toggleScreenShare}
         setIsChatOpen={setIsChatOpen}
         setIsParticipantsOpen={setIsParticipantsOpen}
         onToggleMic={toggleMic}

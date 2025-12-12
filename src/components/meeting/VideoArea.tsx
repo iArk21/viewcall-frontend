@@ -1,19 +1,46 @@
-
-
-
 interface VideoAreaProps {
   micOn: boolean;
   cameraOn: boolean;
   screenSharing: boolean;
+  localStream: MediaStream | null;
+  remoteStreams: {[key: string]: MediaStream};
 }
 
-const VideoArea = ({ micOn, cameraOn, screenSharing }: VideoAreaProps) => {
+const VideoArea = ({ micOn, cameraOn, screenSharing, localStream, remoteStreams }: VideoAreaProps) => {
   return (
-    <div className="flex-1 bg-black rounded-2xl relative overflow-hidden">
-
-      {/* Simulación de video */}
-      <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xl">
-        {cameraOn ? "🎥 Cámara activa" : "📷 Cámara apagada"}
+    <div className="flex-1 bg-black rounded-2xl relative overflow-hidden p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+        {localStream && cameraOn && (
+          <div className="relative bg-gray-800 rounded-xl overflow-hidden">
+            <video
+              ref={(video) => {
+                if (video && localStream) {
+                  video.srcObject = localStream;
+                  video.play().catch((e) => console.error("Error playing local video:", e));
+                }
+              }}
+              muted
+              autoPlay
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-2 left-2 text-white text-sm">Tú</div>
+          </div>
+        )}
+        {Object.entries(remoteStreams).map(([id, stream]) => (
+          <div key={id} className="relative bg-gray-800 rounded-xl overflow-hidden">
+            <video
+              ref={(video) => {
+                if (video && stream) {
+                  video.srcObject = stream;
+                  video.play().catch((e) => console.error("Error playing remote video:", e));
+                }
+              }}
+              autoPlay
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-2 left-2 text-white text-sm">Participante</div>
+          </div>
+        ))}
       </div>
 
       {/* Indicadores inferiores */}
