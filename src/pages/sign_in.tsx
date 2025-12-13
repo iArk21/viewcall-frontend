@@ -1,41 +1,152 @@
 /**
  * SignIn Component
- * WCAG 2.1 – Perceptible, Operable y Comprensible
+ *
+ * Handles the user login process using:
+ * - Email and password authentication
+ * - Google OAuth login (via Zustand store)
+ *
+ * Includes:
+ * - Form validation
+ * - Password visibility toggle
+ * - Real-time error display
+ * - Loading state management
+ * - Automatic redirect after successful login
+ * - Google login using Firebase/Auth observer
  */
 
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
+
 import { setAuthToken } from "../services/authToken";
 import { loginWithEmailPassword, getProfile } from "../services/Firebaseapi";
 import { auth } from "../lib/firebase.config";
-import {
-  FacebookAuthProvider,
-  GithubAuthProvider,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
+import { FacebookAuthProvider, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
 
+  /** Email entered by the user */
   const [email, setUsuario] = useState("");
+
+  /** Password entered by the user */
   const [password, setContrasena] = useState("");
+
+  /** Controls whether the password is shown as plain text */
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
+
+  /** Array of validation or server errors */
   const [errores, setErrores] = useState<string[]>([]);
+
+  /** Indicates whether the login request is in progress */
   const [isLoading, setIsLoading] = useState(false);
 
+  // LOGIN CON GOOGLE
+  const manejarLoginConGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
+
+      localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
+      
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con Google"]);
+    }
+  };
+
+  // LOGIN CON FACEBOOK
+  const manejarLoginConFacebook = async () => {
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
+
+      localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
+
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con Facebook"]);
+    }
+  };
+
+  // LOGIN CON GITHUB
+  const manejarLoginConGithub = async () => {
+    try {
+      const provider = new GithubAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      const idToken = await user.getIdToken(true);
+      setAuthToken(idToken);
+
+      localStorage.setItem("email", user.email || "");
+      localStorage.setItem("userName", user.displayName || "");
+      
+      navigate("/home");
+    } catch (error) {
+      console.error(error);
+      setErrores(["Ocurrió un error al iniciar sesión con GitHub"]);
+    }
+  };
+
+
+  /**
+   * Updates page title when component loads.
+   */
   useEffect(() => {
     document.title = "Iniciar sesión | Viewcall";
   }, []);
 
+  /**
+   * Validates whether a string is a valid email.
+   *
+   * @param email - The email to validate
+   * @returns True if valid format, otherwise false
+   */
   const validarEmail = (email: string): boolean =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  /**
+   * Validates password strength.
+   * Must include:
+   * - Minimum 8 characters
+   * - At least 1 uppercase letter
+   * - At least 1 special character
+   *
+   * @param password - The password to validate
+   * @returns True if strong, otherwise false
+   */
   const validarContrasena = (password: string): boolean =>
-    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(password);
+    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/.test(
+      password
+    );
 
+  /**
+   * Handles the login form submission.
+   * Performs:
+   * - Client-side validation
+   * - API login request
+   * - Storage of authentication token
+   * - Redirection after success
+   *
+   * @param e - Form submit event
+   */
   const manejarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -60,10 +171,7 @@ const SignIn: React.FC = () => {
     setErrores([]);
 
     try {
-      const { idToken } = await loginWithEmailPassword(
-        email.trim(),
-        password
-      );
+      const { idToken } = await loginWithEmailPassword(email.trim(), password);
       setAuthToken(idToken);
 
       const userData = await getProfile();
@@ -73,47 +181,39 @@ const SignIn: React.FC = () => {
       alert("Inicio de sesión exitoso");
       navigate("/home");
     } catch (error: any) {
-      setErrores([error.message || "Credenciales inválidas"]);
+      setErrores([error.message || "Credenciales inválidas."]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#eef2ff] to-[#e3e8ff] p-6"
-      role="main"
-      aria-labelledby="signin-title"
-    >
-      <section
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#eef2ff] to-[#e3e8ff] p-6">
+      <div
         className="w-full max-w-md bg-white shadow-xl rounded-3xl px-10 py-12 border border-gray-100"
         role="form"
-        aria-label="Formulario de inicio de sesión"
       >
         {/* Header */}
-        <header className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-10">
           <img
             src="/viewcall-logo.png"
             alt="Logo de Viewcall"
-            className="w-28 h-28"
+            className="w-28 h-28 mb-0"
           />
-          <h1
-            id="signin-title"
-            className="text-3xl font-extrabold tracking-wide"
-          >
+          <h1 className="text-3xl font-extrabold text-tracking-wide">
             VIEWCALL
           </h1>
           <p className="text-gray-400 text-sm text-center mt-1">
             Inicia sesión para continuar
           </p>
-        </header>
+        </div>
 
         {/* Form */}
-        <form onSubmit={manejarSubmit} className="space-y-6" noValidate>
+        <form onSubmit={manejarSubmit} className="space-y-6">
           {/* Email */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm text-gray-600 font-medium">
-              Correo electrónico
+            <label htmlFor="email" className="text-sm text-gray-300 font-medium">
+              Correo Electrónico
             </label>
             <input
               id="email"
@@ -122,10 +222,7 @@ const SignIn: React.FC = () => {
               disabled={isLoading}
               onChange={(e) => setUsuario(e.target.value)}
               placeholder="ejemplo@correo.com"
-              className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-              aria-required="true"
-              aria-invalid={errores.length > 0}
-              aria-label="Correo electrónico"
+              className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -133,11 +230,10 @@ const SignIn: React.FC = () => {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="password"
-              className="text-sm text-gray-600 font-medium"
+              className="text-sm text-gray-300 font-medium"
             >
               Contraseña
             </label>
-
             <div className="relative">
               <input
                 id="password"
@@ -146,140 +242,114 @@ const SignIn: React.FC = () => {
                 disabled={isLoading}
                 onChange={(e) => setContrasena(e.target.value)}
                 placeholder="Tu contraseña"
-                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500"
-                aria-required="true"
-                aria-invalid={errores.length > 0}
-                aria-describedby="password-help"
+                className="w-full mt-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={() => setMostrarContrasena(!mostrarContrasena)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                aria-label={
-                  mostrarContrasena
-                    ? "Ocultar contraseña"
-                    : "Mostrar contraseña"
-                }
-                aria-pressed={mostrarContrasena}
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-200 transition"
               >
-                {mostrarContrasena ? (
-                  <EyeOff size={20} aria-hidden="true" />
-                ) : (
-                  <Eye size={20} aria-hidden="true" />
-                )}
+                {mostrarContrasena ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-
-            <span id="password-help" className="sr-only">
-              La contraseña debe tener al menos 8 caracteres, una mayúscula y un
-              símbolo
-            </span>
           </div>
 
-          {/* Submit */}
+          {/* Login button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-semibold flex justify-center items-center gap-2"
-            aria-label="Iniciar sesión"
+            className="w-full py-3 mt-2 bg-blue-700 hover:bg-blue-800 transition text-white rounded-lg font-semibold"
           >
-            {isLoading && (
-              <Loader2 className="animate-spin" size={18} aria-hidden="true" />
-            )}
-            {isLoading ? "Iniciando..." : "Iniciar sesión"}
+            {isLoading && <Loader2 className="animate-spin" size={18} />}
+            {isLoading ? "Iniciando..." : "Iniciar Sesión"}
           </button>
 
           {/* Divider */}
-          <div className="flex items-center my-4" aria-hidden="true">
-            <div className="flex-grow h-px bg-gray-300" />
+          <div className="flex items-center my-4">
+            <div className="flex-grow h-px bg-gray-300"></div>
             <span className="px-3 text-xs text-gray-400">o continúa con</span>
-            <div className="flex-grow h-px bg-gray-300" />
+            <div className="flex-grow h-px bg-gray-300"></div>
           </div>
 
-          {/* OAuth Buttons */}
+          {/* Google Login */}
           <button
             type="button"
-            onClick={() => signInWithPopup(auth, new GoogleAuthProvider())}
-            className="w-full py-3 flex items-center justify-center gap-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-            aria-label="Iniciar sesión con Google"
+            onClick={manejarLoginConGoogle}
+            className="w-full py-3 flex items-center justify-center gap-3 
+             border border-gray-300 rounded-lg bg-white 
+             hover:bg-gray-50 transition font-medium text-gray-700"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt=""
+              alt="Google"
               className="w-5 h-5"
             />
-            Google
+            Iniciar sesión con Google
           </button>
-
+          {/* Facebook Login */}
           <button
             type="button"
-            onClick={() => signInWithPopup(auth, new FacebookAuthProvider())}
-            className="w-full py-3 flex items-center justify-center gap-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-            aria-label="Iniciar sesión con Facebook"
+            onClick={manejarLoginConFacebook}
+            className="w-full py-3 flex items-center justify-center gap-3 
+   border border-gray-300 rounded-lg bg-white 
+   hover:bg-gray-50 transition font-medium text-gray-700"
           >
             <img
               src="https://www.svgrepo.com/show/452196/facebook-1.svg"
-              alt=""
+              alt="Facebook"
               className="w-5 h-5"
             />
-            Facebook
+            Iniciar sesión con Facebook
           </button>
 
+          {/* GitHub Login */}
           <button
             type="button"
-            onClick={() => signInWithPopup(auth, new GithubAuthProvider())}
-            className="w-full py-3 flex items-center justify-center gap-3 border border-gray-300 rounded-lg hover:bg-gray-50"
-            aria-label="Iniciar sesión con GitHub"
+            onClick={manejarLoginConGithub}
+            className="w-full py-3 flex items-center justify-center gap-3 
+   border border-gray-300 rounded-lg bg-white 
+   hover:bg-gray-50 transition font-medium text-gray-700"
           >
             <img
               src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
-              alt=""
+              alt="Github"
               className="w-5 h-5"
             />
-            GitHub
+            Iniciar sesión con GitHub
           </button>
+
 
           {/* Forgot password */}
           <div className="text-center">
             <Link
               to="/forgot_password"
-              className="text-xs text-gray-400 hover:text-blue-500"
-              aria-label="Recuperar contraseña"
+              className="text-xs text-gray-400 hover:text-blue-500 transition"
             >
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
-          {/* Errors */}
+          {/* Error messages */}
           {errores.length > 0 && (
-            <div
-              className="bg-red-900/30 border border-red-600 rounded-lg p-3"
-              role="alert"
-              aria-live="assertive"
-            >
+            <div className="bg-red-900/30 border border-red-600 rounded-lg p-3 space-y-1">
               {errores.map((err, idx) => (
-                <p key={idx} className="text-red-400 text-xs">
-                  • {err}
+                <p key={idx} className="text-red-400 text-xs flex items-start">
+                  <span className="mr-2">•</span> {err}
                 </p>
               ))}
             </div>
           )}
 
-          {/* Register */}
-          <p className="text-center text-xs text-gray-400">
+          {/* Register link */}
+          <p className="text-center text-xs text-gray-400 mt-2">
             ¿No tienes cuenta?{" "}
-            <Link
-              to="/sign_up"
-              className="text-blue-500 hover:underline"
-              aria-label="Registrarse en Viewcall"
-            >
+            <Link to="/sign_up" className="text-blue-500 hover:underline">
               Regístrate aquí
             </Link>
           </p>
         </form>
-      </section>
+      </div>
     </main>
   );
 };

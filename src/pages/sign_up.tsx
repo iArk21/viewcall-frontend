@@ -7,9 +7,10 @@ export default function SignUp() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Registro | Viewcall";
+    document.title = "Registro - Viewcall";
   }, []);
 
+  // Form states
   const [usuario, setUsuario] = useState("");
   const [apellido, setApellido] = useState("");
   const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ export default function SignUp() {
   const [mostrarConfirmarContrasena, setMostrarConfirmarContrasena] =
     useState(false);
 
+  // Errores backend
   const [errores, setErrores] = useState<string[]>([]);
 
   const manejarSubmit = async (e: React.FormEvent) => {
@@ -39,249 +41,222 @@ export default function SignUp() {
       alert("¡Registro exitoso!");
       navigate("/sign_in");
     } catch (error: any) {
+      console.error(error);
       setErrores([error.message || "Error en el registro"]);
     }
   };
 
   return (
-    <main
-      className="min-h-screen bg-[#e8ecf7] flex justify-center items-center px-4 pt-10"
-      role="main"
-      aria-labelledby="signup-title"
-    >
-      <section
-        className="bg-white w-full max-w-md rounded-2xl shadow-xl py-10 px-8"
-        role="form"
-        aria-label="Formulario de registro"
-      >
+    <div className="min-h-screen bg-[#e8ecf7] flex justify-center items-center px-4 pt-10">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl py-10 px-8 relative">
+        
         {/* Logo */}
-        <header className="flex flex-col items-center mb-8">
-          <img
-            src="/viewcall-logo.png"
-            alt="Logo de Viewcall"
-            className="w-28 h-28"
-          />
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-25 h-18 rounded-full bg-white shadow-md flex items-center justify-center">
+            <img
+              src="/viewcall-logo.png"
+              alt="Logo de Viewcall"
+              className="w-28 h-28 mb-0"
+            />
+          </div>
+        </div>
 
-          <h1
-            id="signup-title"
-            className="mt-6 text-gray-700 text-xl font-semibold"
-          >
-            Crea tu cuenta
-          </h1>
-
-          <p className="text-gray-500 text-sm">
-            Bienvenido a Viewcall
-          </p>
-        </header>
+        <h2 className="text-center mt-10 text-gray-700 text-lg font-medium">
+          Crea tu cuenta
+        </h2>
+        <p className="mt-1 text-center text-gray-500 text-sm">
+          Bienvenido a Viewcall
+        </p>
 
         {/* FORM */}
-        <form onSubmit={manejarSubmit} className="space-y-4" noValidate>
+        <form onSubmit={manejarSubmit} className="mt-6 space-y-4">
+          
           {/* Nombre */}
           <div>
-            <label htmlFor="nombre" className="text-sm text-gray-700 font-medium">
-              Nombre
-            </label>
+            <label className="text-gray-700 text-sm font-medium">Nombre</label>
             <input
-              id="nombre"
               type="text"
               required
               minLength={3}
               value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
+              onChange={(e) => {
+                setUsuario(e.target.value);
+                e.target.setCustomValidity("");
+
+                if (e.target.value.length < 3) {
+                  e.target.setCustomValidity(
+                    "El nombre debe tener mínimo 3 caracteres."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="Juan"
-              aria-required="true"
-              aria-label="Nombre"
             />
           </div>
 
           {/* Apellidos */}
           <div>
-            <label
-              htmlFor="apellido"
-              className="text-sm text-gray-700 font-medium"
-            >
-              Apellidos
-            </label>
+            <label className="text-gray-700 text-sm font-medium">Apellidos</label>
             <input
-              id="apellido"
               type="text"
               required
               minLength={3}
               value={apellido}
-              onChange={(e) => setApellido(e.target.value)}
+              onChange={(e) => {
+                setApellido(e.target.value);
+                e.target.setCustomValidity("");
+
+                if (e.target.value.length < 3) {
+                  e.target.setCustomValidity(
+                    "El apellido debe tener mínimo 3 caracteres."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="Pérez López"
-              aria-required="true"
-              aria-label="Apellidos"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="text-sm text-gray-700 font-medium">
+            <label className="text-gray-700 text-sm font-medium">
               Correo electrónico
             </label>
             <input
-              id="email"
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                e.target.setCustomValidity("");
+
+                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (!regex.test(e.target.value)) {
+                  e.target.setCustomValidity(
+                    "Incluye un signo '@' en la dirección de correo electrónico."
+                  );
+                }
+              }}
               className="w-full mt-1 p-3 rounded-lg border border-gray-300"
               placeholder="correo@ejemplo.com"
-              aria-required="true"
-              aria-label="Correo electrónico"
             />
           </div>
 
           {/* Fecha Nacimiento */}
           <div>
-            <label
-              htmlFor="birthdate"
-              className="text-sm text-gray-700 font-medium"
-            >
+            <label className="text-gray-700 text-sm font-medium">
               Fecha de nacimiento
             </label>
             <input
-              id="birthdate"
               type="date"
               required
               value={fechaNacimiento}
-              onChange={(e) => setFechaNacimiento(e.target.value)}
-              className="w-full p-3 rounded-lg border border-gray-300"
-              aria-required="true"
-              aria-label="Fecha de nacimiento"
+              onChange={(e) => {
+                setFechaNacimiento(e.target.value);
+                e.target.setCustomValidity("");
+              }}
+              className="w-full p-2 rounded bg-white border border-gray-300"
             />
           </div>
 
           {/* Contraseña */}
           <div>
-            <label
-              htmlFor="password"
-              className="text-sm text-gray-700 font-medium"
-            >
-              Contraseña
-            </label>
-
+            <label className="text-gray-700 text-sm font-medium">Contraseña</label>
             <div className="relative">
               <input
-                id="password"
                 type={mostrarContrasena ? "text" : "password"}
                 required
-                minLength={8}
                 value={contrasena}
-                onChange={(e) => setContrasena(e.target.value)}
+                minLength={8}
+                onChange={(e) => {
+                  setContrasena(e.target.value);
+                  e.target.setCustomValidity("");
+
+                  const regex =
+                    /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+                  if (!regex.test(e.target.value)) {
+                    e.target.setCustomValidity(
+                      "Debe tener 8 caracteres, una mayúscula y un símbolo especial."
+                    );
+                  }
+                }}
                 className="w-full mt-1 p-3 rounded-lg border border-gray-300 pr-10"
                 placeholder="********"
-                aria-required="true"
-                aria-describedby="password-help"
               />
-
               <button
                 type="button"
                 onClick={() => setMostrarContrasena(!mostrarContrasena)}
                 className="absolute right-3 top-3 text-gray-600"
-                aria-label={
-                  mostrarContrasena
-                    ? "Ocultar contraseña"
-                    : "Mostrar contraseña"
-                }
-                aria-pressed={mostrarContrasena}
               >
-                {mostrarContrasena ? (
-                  <EyeOff size={18} aria-hidden="true" />
-                ) : (
-                  <Eye size={18} aria-hidden="true" />
-                )}
+                {mostrarContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-
-            <span id="password-help" className="sr-only">
-              Mínimo 8 caracteres, una mayúscula y un símbolo especial
-            </span>
           </div>
 
           {/* Confirmar Contraseña */}
           <div>
-            <label
-              htmlFor="confirm-password"
-              className="text-sm text-gray-700 font-medium"
-            >
+            <label className="text-gray-700 text-sm font-medium">
               Confirmar contraseña
             </label>
-
             <div className="relative">
               <input
-                id="confirm-password"
                 type={mostrarConfirmarContrasena ? "text" : "password"}
                 required
                 value={confirmarContrasena}
-                onChange={(e) => setConfirmarContrasena(e.target.value)}
+                onChange={(e) => {
+                  setConfirmarContrasena(e.target.value);
+                  e.target.setCustomValidity("");
+
+                  if (e.target.value !== contrasena) {
+                    e.target.setCustomValidity("Las contraseñas no coinciden.");
+                  }
+                }}
                 className="w-full mt-1 p-3 rounded-lg border border-gray-300 pr-10"
                 placeholder="********"
-                aria-required="true"
-                aria-label="Confirmar contraseña"
               />
-
               <button
                 type="button"
                 onClick={() =>
-                  setMostrarConfirmarContrasena(
-                    !mostrarConfirmarContrasena
-                  )
+                  setMostrarConfirmarContrasena(!mostrarConfirmarContrasena)
                 }
                 className="absolute right-3 top-3 text-gray-600"
-                aria-label={
-                  mostrarConfirmarContrasena
-                    ? "Ocultar confirmación de contraseña"
-                    : "Mostrar confirmación de contraseña"
-                }
-                aria-pressed={mostrarConfirmarContrasena}
               >
                 {mostrarConfirmarContrasena ? (
-                  <EyeOff size={18} aria-hidden="true" />
+                  <EyeOff size={18} />
                 ) : (
-                  <Eye size={18} aria-hidden="true" />
+                  <Eye size={18} />
                 )}
               </button>
             </div>
           </div>
 
-          {/* Errores backend */}
+          {/* Errores del backend */}
           {errores.length > 0 && (
-            <div
-              className="bg-red-100 border border-red-400 rounded p-3 text-red-700 text-sm"
-              role="alert"
-              aria-live="assertive"
-            >
+            <div className="bg-red-100 border border-red-400 rounded p-3 text-red-600 text-sm">
               {errores.map((err, i) => (
                 <p key={i}>• {err}</p>
               ))}
             </div>
           )}
 
-          {/* Submit */}
+          {/* botón */}
           <button
             type="submit"
-            className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-semibold"
-            aria-label="Registrarse en Viewcall"
+            className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg font-semibold transition"
           >
             Registrarse
           </button>
 
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-sm text-gray-500 mt-2">
             ¿Ya tienes una cuenta?{" "}
-            <Link
-              to="/sign_in"
-              className="text-blue-700 hover:underline"
-              aria-label="Ir a iniciar sesión"
-            >
+            <Link to="/sign_in" className="text-blue-700 hover:underline">
               Inicia sesión
             </Link>
           </p>
         </form>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
