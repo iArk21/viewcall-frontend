@@ -1,10 +1,10 @@
-import { 
-  Mic, 
-  Video, 
-  Monitor, 
-  Users, 
-  MessageCircle, 
-  PhoneOff 
+import {
+  Mic,
+  Video,
+  Monitor,
+  Users,
+  MessageCircle,
+  PhoneOff
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -37,7 +37,7 @@ const ControlBar = ({
   setIsParticipantsOpen,
   onToggleMic,
 }: Props) => {
-  
+
   const navigate = useNavigate();
 
   // Lógica para colgar la llamada
@@ -58,7 +58,7 @@ const ControlBar = ({
 
   return (
     <div className="bg-[#20242E] py-4 flex justify-center gap-6 border-t border-white/10">
-      
+
       {/* Mic */}
       <button
         onClick={toggleMic}
@@ -71,7 +71,7 @@ const ControlBar = ({
         onClick={() => setCameraOn(!cameraOn)}
         className="w-14 h-14 rounded-full bg-[#161A21] flex items-center justify-center cursor-pointer"
       >
-        <Video />
+        <Video className={cameraOn ? "text-white" : "text-red-500"} />
       </button>
 
       <button
