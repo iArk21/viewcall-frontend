@@ -34,12 +34,18 @@ interface PeersMap {
 export default function useVoice({ roomId, micEnabled = true, cameraEnabled = true }: UseVoiceProps) {
   const [micOn, setMicOn] = useState(micEnabled);
   const [cameraOn, setCameraOn] = useState(cameraEnabled);
+  const cameraOnRef = useRef(cameraEnabled); // Ref to track desired camera state
   const [screenSharing, setScreenSharing] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStreams, setRemoteStreams] = useState<{[key: string]: MediaStream}>({});
+  const [remoteStreams, setRemoteStreams] = useState<{ [key: string]: MediaStream }>({});
   const socketRef = useRef<Socket | null>(null);
   const peersRef = useRef<PeersMap>({});
   const localStreamRef = useRef<MediaStream | null>(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    cameraOnRef.current = cameraOn;
+  }, [cameraOn]);
 
   // Helper to create audio elements (kept from original logic)
   const createClientMediaElements = (peerId: string) => {
@@ -60,8 +66,11 @@ export default function useVoice({ roomId, micEnabled = true, cameraEnabled = tr
   const updateClientMediaElements = (peerId: string, stream: MediaStream) => {
     const audioEl = document.getElementById(`${peerId}_audio`) as HTMLAudioElement;
     if (audioEl) {
-      audioEl.srcObject = new MediaStream([stream.getAudioTracks()[0]]);
-      audioEl.play().catch((e) => console.error("Error playing audio stream:", e));
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioEl.srcObject = new MediaStream([audioTrack]);
+        audioEl.play().catch((e) => console.error("Error playing audio stream:", e));
+      }
     }
   };
 
@@ -135,11 +144,13 @@ export default function useVoice({ roomId, micEnabled = true, cameraEnabled = tr
     });
 
     peerConnection.on("stream", (stream) => {
-      setRemoteStreams(prev => ({...prev, [theirSocketId]: stream}));
+      setRemoteStreams(prev => ({ ...prev, [theirSocketId]: stream }));
       updateClientMediaElements(theirSocketId, stream);
     });
 
     peerConnection.on("error", (err) => {
+      // Ignore benign errors from closing connections
+      if (err.message && err.message.includes("User-Initiated Abort")) return;
       console.error("Peer connection error:", err);
     });
 
@@ -207,7 +218,7 @@ export default function useVoice({ roomId, micEnabled = true, cameraEnabled = tr
         mySocket.on("userDisconnected", (_id: string) => {
           if (_id !== mySocket?.id) {
             removeClientAudioElement(_id);
-            setRemoteStreams(prev => { const newR = {...prev}; delete newR[_id]; return newR; });
+            setRemoteStreams(prev => { const newR = { ...prev }; delete newR[_id]; return newR; });
             if (myPeers[_id]?.peerConnection) {
               myPeers[_id].peerConnection.destroy();
             }
@@ -282,59 +293,143 @@ export default function useVoice({ roomId, micEnabled = true, cameraEnabled = tr
   }, [micOn]);
 
   const toggleCamera = useCallback(() => {
+    // Determine new state
+    const newState = !cameraOn;
+    setCameraOn(newState);
+
+    // If we are sharing screen, do NOT touch the video track of the current stream,
+    // because that video track IS the screen, and we don't want to turn off the screen.
+    // We just update the state so that when screen sharing stops, we know what to restore.
+    if (screenSharing) {
+      return;
+    }
+
     if (localStreamRef.current) {
       const videoTracks = localStreamRef.current.getVideoTracks();
       if (videoTracks.length > 0) {
-        // Toggle enabled state
-        const newState = !cameraOn;
         videoTracks.forEach((track) => {
           track.enabled = newState;
         });
-        setCameraOn(newState);
       }
     }
-  }, [cameraOn]);
+  }, [cameraOn, screenSharing]);
+
+  /* 
+   * Stops screen sharing and reverts to camera.
+   * This function is defined outside to be stable or used inside `toggleScreenShare`.
+   * However, since it largely depends on state/refs that are in scope, we define it here.
+   */
+  const stopScreenSharing = useCallback(async () => {
+    try {
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const videoTrack = cameraStream.getVideoTracks()[0];
+
+      // Restore the enabled/disabled state based on user preference
+      videoTrack.enabled = cameraOnRef.current;
+
+      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+
+      const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
+      localStreamRef.current = newStream;
+      setLocalStream(newStream);
+
+      // Update peers
+      Object.values(peersRef.current).forEach(({ peerConnection }) => {
+        if (!peerConnection.connected) return;
+        if (oldVideoTrack) {
+          try {
+            peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
+          } catch (err) {
+            console.warn("Failed to replace track for peer (attempting fallback):", err);
+            try {
+              (peerConnection as any).addTrack(videoTrack, newStream);
+            } catch (addErr) {
+              console.error("Fallback addTrack failed:", addErr);
+            }
+          }
+        } else {
+          try {
+            (peerConnection as any).addTrack(videoTrack, newStream);
+          } catch (e) {
+            console.error("Error adding track:", e);
+          }
+        }
+      });
+
+      // Stop the screen share track (if it's not already stopped)
+      // Note: If this was triggered by 'onended', the track is already "ended", 
+      // but calling stop() is safe/idempotent usually, or we can check readyState.
+      if (oldVideoTrack && oldVideoTrack.readyState !== "ended") {
+        oldVideoTrack.stop();
+      }
+
+      setScreenSharing(false);
+    } catch (e: any) {
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") return;
+      console.error("Error switching back to camera:", e);
+    }
+  }, []);
+
+  const startScreenSharing = useCallback(async () => {
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const videoTrack = screenStream.getVideoTracks()[0];
+      const audioTrack = localStreamRef.current?.getAudioTracks()[0];
+      const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+
+      const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
+      localStreamRef.current = newStream;
+      setLocalStream(newStream);
+
+      // Update peers
+      Object.values(peersRef.current).forEach(({ peerConnection }) => {
+        if (!peerConnection.connected) return;
+        if (oldVideoTrack) {
+          try {
+            peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
+          } catch (err) {
+            console.warn("Failed to replace track for peer (attempting fallback):", err);
+            try {
+              (peerConnection as any).addTrack(videoTrack, newStream);
+            } catch (addErr) {
+              console.error("Fallback addTrack failed:", addErr);
+            }
+          }
+        } else {
+          try {
+            (peerConnection as any).addTrack(videoTrack, newStream);
+          } catch (e) {
+            console.error("Error adding track:", e);
+          }
+        }
+      });
+
+      // Stop the camera track
+      oldVideoTrack?.stop();
+
+      // IMPORTANT: When the user clicks "Stop sharing" in the browser native UI,
+      // this event fires. We MUST call stopScreenSharing() explicitly here.
+      // Do NOT call toggleScreenShare() because that might rely on stale state closure
+      // if not careful, and strict separation is cleaner.
+      videoTrack.onended = () => {
+        stopScreenSharing();
+      };
+
+      setScreenSharing(true);
+    } catch (e: any) {
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") return;
+      console.error("Error sharing screen:", e);
+    }
+  }, [stopScreenSharing]);
 
   const toggleScreenShare = useCallback(async () => {
-    if (!screenSharing) {
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const videoTrack = screenStream.getVideoTracks()[0];
-        const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-        const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
-        localStreamRef.current = newStream;
-        setLocalStream(newStream);
-        // Update peers
-        Object.values(peersRef.current).forEach(({ peerConnection }) => {
-          if (oldVideoTrack) peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
-        });
-        videoTrack.onended = () => {
-          toggleScreenShare();
-        };
-        setScreenSharing(true);
-      } catch (e) {
-        console.error("Error sharing screen:", e);
-      }
+    if (screenSharing) {
+      await stopScreenSharing();
     } else {
-      try {
-        const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const videoTrack = cameraStream.getVideoTracks()[0];
-        const audioTrack = localStreamRef.current?.getAudioTracks()[0];
-        const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-        const newStream = new MediaStream([audioTrack, videoTrack].filter(Boolean) as MediaStreamTrack[]);
-        localStreamRef.current = newStream;
-        setLocalStream(newStream);
-        // Update peers
-        Object.values(peersRef.current).forEach(({ peerConnection }) => {
-          if (oldVideoTrack) peerConnection.replaceTrack(oldVideoTrack, videoTrack, newStream);
-        });
-        setScreenSharing(false);
-      } catch (e) {
-        console.error("Error switching to camera:", e);
-      }
+      await startScreenSharing();
     }
-  }, [screenSharing]);
+  }, [screenSharing, stopScreenSharing, startScreenSharing]);
 
   useEffect(() => {
     // Sync micEnabled prop with state if it changes externally?

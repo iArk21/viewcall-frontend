@@ -1,43 +1,52 @@
+import { useEffect, useRef } from "react";
+
 interface VideoAreaProps {
   micOn: boolean;
   cameraOn: boolean;
   screenSharing: boolean;
   localStream: MediaStream | null;
-  remoteStreams: {[key: string]: MediaStream};
+  remoteStreams: { [key: string]: MediaStream };
 }
+
+const VideoPlayer = ({ stream, isLocal }: { stream: MediaStream; isLocal: boolean }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && stream) {
+      video.srcObject = stream;
+      video.play().catch((e) => {
+        if (e.name !== "AbortError") {
+          console.error("Error playing video:", e);
+        }
+      });
+    }
+  }, [stream]);
+
+  return (
+    <video
+      ref={videoRef}
+      muted={isLocal}
+      autoPlay
+      playsInline
+      className="w-full h-full object-cover"
+    />
+  );
+};
 
 const VideoArea = ({ micOn, cameraOn, screenSharing, localStream, remoteStreams }: VideoAreaProps) => {
   return (
     <div className="flex-1 bg-black rounded-2xl relative overflow-hidden p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-        {localStream && cameraOn && (
+        {localStream && (cameraOn || screenSharing) && (
           <div className="relative bg-gray-800 rounded-xl overflow-hidden">
-            <video
-              ref={(video) => {
-                if (video && localStream) {
-                  video.srcObject = localStream;
-                  video.play().catch((e) => console.error("Error playing local video:", e));
-                }
-              }}
-              muted
-              autoPlay
-              className="w-full h-full object-cover"
-            />
+            <VideoPlayer stream={localStream} isLocal={true} />
             <div className="absolute bottom-2 left-2 text-white text-sm">Tú</div>
           </div>
         )}
         {Object.entries(remoteStreams).map(([id, stream]) => (
           <div key={id} className="relative bg-gray-800 rounded-xl overflow-hidden">
-            <video
-              ref={(video) => {
-                if (video && stream) {
-                  video.srcObject = stream;
-                  video.play().catch((e) => console.error("Error playing remote video:", e));
-                }
-              }}
-              autoPlay
-              className="w-full h-full object-cover"
-            />
+            <VideoPlayer stream={stream} isLocal={false} />
             <div className="absolute bottom-2 left-2 text-white text-sm">Participante</div>
           </div>
         ))}
