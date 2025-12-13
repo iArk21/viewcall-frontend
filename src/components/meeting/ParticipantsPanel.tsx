@@ -12,7 +12,10 @@ interface ParticipantsProps {
   username: string;
 }
 
-export default function ParticipantsPanel({ roomId, username }: ParticipantsProps) {
+export default function ParticipantsPanel({
+  roomId,
+  username,
+}: ParticipantsProps) {
   const [participants, setParticipants] = useState<any[]>([]);
 
   useEffect(() => {
@@ -27,13 +30,11 @@ export default function ParticipantsPanel({ roomId, username }: ParticipantsProp
         },
       };
 
-      // Agregar al usuario local (React no conoce al usuario propio hasta que lo agregues)
       setParticipants((prev) => {
         const exists = prev.some((p) => p.socketId === selfUser.socketId);
         return exists ? prev : [...prev, selfUser];
       });
 
-      // Unirse a la sala
       joinRoom(roomId, selfUser.userInfo);
     };
 
@@ -43,7 +44,6 @@ export default function ParticipantsPanel({ roomId, username }: ParticipantsProp
       socket.once("connect", addSelf);
     }
 
-    // --- LISTA INICIAL ---
     const unsubInitial = onExistingUsers((users) => {
       setParticipants((prev) => {
         const ids = new Set(prev.map((p) => p.socketId));
@@ -57,7 +57,6 @@ export default function ParticipantsPanel({ roomId, username }: ParticipantsProp
       });
     });
 
-    // --- USUARIO ENTRA ---
     const unsubJoin = onUserJoined((data) => {
       setParticipants((prev) => {
         const exist = prev.some((p) => p.socketId === data.socketId);
@@ -65,7 +64,6 @@ export default function ParticipantsPanel({ roomId, username }: ParticipantsProp
       });
     });
 
-    // --- USUARIO SALE ---
     const unsubLeft = onUserLeft((data) => {
       setParticipants((prev) =>
         prev.filter((p) => p.socketId !== data.socketId)
@@ -81,26 +79,58 @@ export default function ParticipantsPanel({ roomId, username }: ParticipantsProp
   }, [roomId, username]);
 
   return (
-    <div className="bg-[#20242E] rounded-xl p-4">
-      <h2 className="text-lg font-semibold mb-3">Participantes</h2>
+    <section
+      className="bg-[#20242E] rounded-xl p-4 h-full flex flex-col min-h-0"
+      role="region"
+      aria-label="Panel de participantes de la sala"
+    >
+      {/* Título */}
+      <h2
+        className="text-lg font-semibold mb-3 text-white"
+        id="participants-title"
+      >
+        Participantes
+      </h2>
 
-      <div className="flex flex-col gap-3 max-h-64 overflow-y-auto pr-1">
+      {/* Lista */}
+      <div
+        className="flex flex-col gap-3 max-h-64 overflow-y-auto pr-1 min-h-0"
+        role="list"
+        aria-live="polite"
+        aria-relevant="additions removals"
+        aria-labelledby="participants-title"
+      >
         {participants.map((p) => (
           <div
             key={p.socketId}
+            role="listitem"
+            aria-label={`Participante ${p.userInfo.displayName}`}
             className="flex items-center gap-3 bg-[#161A21] p-3 rounded-lg"
           >
-            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+            {/* Avatar decorativo */}
+            <div
+              className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center"
+              aria-hidden="true"
+            >
               {p.userInfo.displayName?.[0]?.toUpperCase() ?? "U"}
             </div>
-            <p className="text-sm">{p.userInfo.displayName}</p>
+
+            <p className="text-sm text-white">
+              {p.userInfo.displayName}
+            </p>
           </div>
         ))}
 
         {participants.length === 0 && (
-          <p className="text-sm opacity-70">No hay participantes todavía.</p>
+          <p
+            className="text-sm opacity-70 text-white"
+            role="status"
+            aria-label="No hay participantes en la sala"
+          >
+            No hay participantes todavía.
+          </p>
         )}
       </div>
-    </div>
+    </section>
   );
 }

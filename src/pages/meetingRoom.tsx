@@ -12,17 +12,16 @@ export default function MeetingRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const location = useLocation();
 
-  // Obtener nombre desde JoinMeeting o localStorage
   const username =
-    location.state?.username || localStorage.getItem("userName") || "Invitado";
+    location.state?.username ||
+    localStorage.getItem("userName") ||
+    "Invitado";
 
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(true);
 
-  // Generate unique peer ID for voice
   const peerId = `${username}-${Date.now()}`;
 
-  // Voice hook
   const {
     micOn,
     toggleMic,
@@ -44,13 +43,25 @@ export default function MeetingRoom() {
   });
 
   return (
-    <div className="h-screen fixed inset-0 overflow-hidden bg-[#e8ecf7] text-white flex flex-col">
-      <Navbar />
+    <div
+      className="h-screen fixed inset-0 overflow-hidden bg-[#e8ecf7] text-white flex flex-col"
+      role="document"
+      aria-label="Sala de videollamada ViewCall"
+    >
+      {/* NAVBAR */}
+      <header role="banner" aria-label="Barra de navegación principal">
+        <Navbar />
+      </header>
 
-      <div className="mt-4 flex flex-col items-center gap-3 bg-white text-black p-4 rounded-xl shadow-md flex-shrink-0">
-        <div className="font-semibold text-lg">
-          Código de reunión: <span className="tracking-wider">{roomId}</span>
-        </div>
+      {/* MEETING INFO */}
+      <section
+        className="mt-4 flex flex-col items-center gap-3 bg-white text-black p-4 rounded-xl shadow-md flex-shrink-0"
+        aria-labelledby="meeting-code-title"
+      >
+        <h1 id="meeting-code-title" className="font-semibold text-lg">
+          Código de reunión:
+          <span className="tracking-wider ml-2">{roomId}</span>
+        </h1>
 
         <button
           onClick={() => {
@@ -58,13 +69,23 @@ export default function MeetingRoom() {
             alert("Código copiado al portapapeles ✓");
           }}
           className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+          aria-label="Copiar código de la reunión al portapapeles"
         >
           Copiar código
         </button>
-      </div>
+      </section>
 
-      <div className="flex flex-1 p-4 lg:p-6 gap-6 relative overflow-hidden flex-col lg:flex-row">
-        <div className="flex-1 flex flex-col min-h-0">
+      {/* MAIN CONTENT */}
+      <main
+        className="flex flex-1 p-4 lg:p-6 gap-6 relative overflow-hidden flex-col lg:flex-row"
+        role="main"
+        aria-label="Área principal de la videollamada"
+      >
+        {/* VIDEO AREA */}
+        <section
+          className="flex-1 flex flex-col min-h-0"
+          aria-label="Área de transmisión de video"
+        >
           <VideoArea
             micOn={micOn}
             cameraOn={cameraOn}
@@ -72,15 +93,19 @@ export default function MeetingRoom() {
             localStream={localStream}
             remoteStreams={remoteStreams}
           />
-        </div>
+        </section>
 
-        {/* Side Panel Container - Responsive */}
+        {/* SIDE PANELS */}
         {(isChatOpen || isParticipantsOpen) && (
-          <div className={`
-            fixed inset-0 z-50 bg-[#e8ecf7] p-4 flex flex-col gap-4
-            lg:static lg:w-80 lg:bg-transparent lg:p-0 lg:z-auto
-          `}>
-            {/* Mobile Close Header - Only visible on mobile/overlay */}
+          <aside
+            className={`
+              fixed inset-0 z-50 bg-[#e8ecf7] p-4 flex flex-col gap-4
+              lg:static lg:w-80 lg:bg-transparent lg:p-0 lg:z-auto
+            `}
+            role="complementary"
+            aria-label="Panel lateral de chat y participantes"
+          >
+            {/* MOBILE CLOSE */}
             <div className="flex justify-end lg:hidden mb-2">
               <button
                 onClick={() => {
@@ -88,39 +113,51 @@ export default function MeetingRoom() {
                   setIsParticipantsOpen(false);
                 }}
                 className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+                aria-label="Cerrar panel lateral"
               >
                 ✕ Cerrar
               </button>
             </div>
 
             {isChatOpen && (
-              <ChatPanel
-                roomId={roomId!}
-                username={username}
-                onClose={() => setIsChatOpen(false)}
-              />
+              <section aria-label="Panel de chat de la reunión">
+                <ChatPanel
+                  roomId={roomId!}
+                  username={username}
+                  onClose={() => setIsChatOpen(false)}
+                />
+              </section>
             )}
-            {isParticipantsOpen && (
-              <ParticipantsPanel
-                roomId={roomId!}
-                username={username}
-              />
-            )}
-          </div>
-        )}
-      </div>
 
-      <ControlBar
-        micOn={micOn}
-        setMicOn={toggleMic}
-        cameraOn={cameraOn}
-        setCameraOn={toggleCamera}
-        screenSharing={screenSharing}
-        setScreenSharing={toggleScreenShare}
-        setIsChatOpen={setIsChatOpen}
-        setIsParticipantsOpen={setIsParticipantsOpen}
-        onToggleMic={toggleMic}
-      />
+            {isParticipantsOpen && (
+              <section aria-label="Panel de participantes de la reunión">
+                <ParticipantsPanel
+                  roomId={roomId!}
+                  username={username}
+                />
+              </section>
+            )}
+          </aside>
+        )}
+      </main>
+
+      {/* CONTROL BAR */}
+      <nav
+        role="navigation"
+        aria-label="Controles de la videollamada"
+      >
+        <ControlBar
+          micOn={micOn}
+          setMicOn={toggleMic}
+          cameraOn={cameraOn}
+          setCameraOn={toggleCamera}
+          screenSharing={screenSharing}
+          setScreenSharing={toggleScreenShare}
+          setIsChatOpen={setIsChatOpen}
+          setIsParticipantsOpen={setIsParticipantsOpen}
+          onToggleMic={toggleMic}
+        />
+      </nav>
     </div>
   );
 }
