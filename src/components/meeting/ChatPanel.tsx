@@ -11,15 +11,16 @@ import {
 interface ChatPanelProps {
   roomId: string;
   username: string;
+  onClose?: () => void;
 }
 
-interface Message {   
+interface Message {
   text: string;
   senderName: string;
   timestamp: number;
 }
 
-export default function ChatPanel({ roomId, username }: ChatPanelProps) {
+export default function ChatPanel({ roomId, username, onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,10 +81,17 @@ export default function ChatPanel({ roomId, username }: ChatPanelProps) {
   };
 
   return (
-    <div className="flex-1 bg-[#20242E] rounded-xl p-4 flex flex-col">
-      <h2 className="text-lg font-semibold mb-3">Chat</h2>
+    <div className="flex-1 bg-[#20242E] rounded-xl p-4 flex flex-col min-h-0 h-full">
+      <div className="flex justify-between items-center mb-3 flex-shrink-0">
+        <h2 className="text-lg font-semibold">Chat</h2>
+        {onClose && (
+          <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full">
+            ✕
+          </button>
+        )}
+      </div>
 
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 bg-[#1B1F29] p-2 rounded-lg">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2 bg-[#1B1F29] p-2 rounded-lg scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0">
         {messages.map((msg, index) => (
           <div key={index} className="bg-[#161A21] p-3 rounded-lg text-sm text-gray-300">
             <strong>{msg.senderName}</strong>: {msg.text}
