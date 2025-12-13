@@ -120,7 +120,7 @@ export default function MeetingRoom() {
             </div>
 
             {isChatOpen && (
-              <section aria-label="Panel de chat de la reunión">
+              <section aria-label="Panel de chat de la reunión" className="flex-1 min-h-0 flex flex-col">
                 <ChatPanel
                   roomId={roomId!}
                   username={username}
@@ -130,7 +130,7 @@ export default function MeetingRoom() {
             )}
 
             {isParticipantsOpen && (
-              <section aria-label="Panel de participantes de la reunión">
+              <section aria-label="Panel de participantes de la reunión" className="flex-1 min-h-0 flex flex-col">
                 <ParticipantsPanel
                   roomId={roomId!}
                   username={username}
